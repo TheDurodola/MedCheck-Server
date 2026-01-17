@@ -1,19 +1,16 @@
-# Stage 1: Build the application
+# Stage 1: Build
 FROM maven:3.9-eclipse-temurin-21 AS build
 WORKDIR /app
-# Copy only the pom.xml first to cache dependencies
 COPY pom.xml .
 RUN mvn dependency:go-offline
-# Copy the source code and build the jar
 COPY src ./src
 RUN mvn clean package -DskipTests
 
-# Stage 2: Run the application
+# Stage 2: Run
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
-# Copy the built jar from the first stage
+# Using a specific copy command to avoid grabbing the '.original' jar
 COPY --from=build /app/target/*.jar app.jar
-# Expose the port your app runs on
-EXPOSE 8080
-# Run the application
-ENTRYPOINT ["java", "-jar", "app.jar"]
+
+# Render needs the app to bind to 0.0.0.0 and the dynamic $PORT
+ENTRYPOINT ["sh", "-c", "java -Dserver.port=${PORT} -Djava.security.egd=file:/dev/./urandom -jar app.jar"]
