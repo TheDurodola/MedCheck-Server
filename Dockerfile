@@ -1,11 +1,11 @@
-# Use a build stage to keep the final image small
-FROM maven:3.9.6-eclipse-temurin-17 AS build
+# Use JDK 21 for the build stage
+FROM maven:3.9.6-eclipse-temurin-21 AS build
 COPY . .
 RUN mvn clean package -DskipTests
 
-# Final runtime stage
-FROM eclipse-temurin:17-jre-jammy
+# Use JRE 21 for the final runtime stage
+FROM eclipse-temurin:21-jre-jammy
 COPY --from=build /target/*.jar app.jar
 
-# This is the critical part: tell Spring to use the $PORT variable
+# Render provides the PORT environment variable automatically
 ENTRYPOINT ["java", "-Dserver.port=${PORT}", "-jar", "/app.jar"]
