@@ -10,7 +10,7 @@ public class TestController {
 
     @GetMapping("/test/live")
     public ResponseEntity<String> test() {
-        return ResponseEntity.ok("ok");
+        return ResponseEntity.ok("We are fucking live");
     }
 
 }
