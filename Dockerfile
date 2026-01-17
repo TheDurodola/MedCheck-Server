@@ -9,8 +9,8 @@ RUN mvn clean package -DskipTests
 # Stage 2: Run
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
-# Using a specific copy command to avoid grabbing the '.original' jar
 COPY --from=build /app/target/*.jar app.jar
 
-# Render needs the app to bind to 0.0.0.0 and the dynamic $PORT
-ENTRYPOINT ["sh", "-c", "java -Dserver.port=${PORT} -Djava.security.egd=file:/dev/./urandom -jar app.jar"]
+EXPOSE 8080
+
+ENTRYPOINT ["java", "-jar", "app.jar"]
