@@ -6,4 +6,5 @@ import com.yrsd.medcheck.exceptions.FailedFileUploadException;
 
 public interface AuthService {
     public RegisterUserResponse registerUser(RegisterUserRequest request) throws FailedFileUploadException;
+
 }

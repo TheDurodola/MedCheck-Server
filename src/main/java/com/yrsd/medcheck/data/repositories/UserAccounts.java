@@ -4,8 +4,11 @@ import com.yrsd.medcheck.data.models.UserAccount;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public interface UserAccounts extends JpaRepository<UserAccount, String> {
-    public boolean existsByEmail(String email);
-    public boolean existsByUsername(String username);
+     boolean existsByEmail(String email);
+     boolean existsByUsername(String username);
+     Optional<UserAccount> findByUsername(String username);
 }
