@@ -4,9 +4,10 @@ import com.yrsd.medcheck.config.MapperConfig;
 import com.yrsd.medcheck.data.models.UserAccount;
 import com.yrsd.medcheck.data.repositories.UserAccounts;
 import com.yrsd.medcheck.dtos.requests.RegisterUserRequest;
+import com.yrsd.medcheck.dtos.responses.CloudServiceResponse;
 import com.yrsd.medcheck.dtos.responses.RegisterUserResponse;
 import com.yrsd.medcheck.exceptions.*;
-import org.junit.jupiter.api.AfterEach;
+import com.yrsd.medcheck.proxy.cloud.CloudService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -38,11 +39,14 @@ class AuthServiceImplTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
-    @Captor
-    private ArgumentCaptor<UserAccount> userAccountCaptor;
+    @Mock
+    private CloudService  cloudService;
 
     @Mock
     private UserAccounts userAccounts;
+
+    @Captor
+    private ArgumentCaptor<UserAccount> userAccountCaptor;
 
     @InjectMocks
     private AuthServiceImpl authService;
@@ -51,12 +55,10 @@ class AuthServiceImplTest {
     void setUp() {
         modelMapper = new ModelMapper();
 
-
         MapperConfig.configureMatchingStrategy(modelMapper);
-
-
         MapperConfig.configureForUserAccountToRegisterUserResponse(modelMapper);
         MapperConfig.configureForRegisterUserRequestToUserAccount(modelMapper);
+
         request = new RegisterUserRequest();
         request.setDateOfBirth(LocalDate.of(2000, 1, 1));
         request.setGender("MALE");
@@ -86,6 +88,7 @@ class AuthServiceImplTest {
 
     @Test
     void saveAUserAccount() {
+        when(cloudService.uploadProfilePicture(any())).thenReturn(new CloudServiceResponse("www.cloudianry.com"));
         when(userAccounts.save(any(UserAccount.class))).thenReturn(new UserAccount());
         authService.registerUser(request);
         verify(userAccounts,  Mockito.times(1)).save(Mockito.any(UserAccount.class));
@@ -93,6 +96,7 @@ class AuthServiceImplTest {
 
     @Test
     void returnTheRightResponse() {
+        when(cloudService.uploadProfilePicture(any())).thenReturn(new CloudServiceResponse("www.cloudianry.com"));
         when(userAccounts.save(any(UserAccount.class))).thenReturn(saved);
         RegisterUserResponse response = authService.registerUser(request);
         assertThat(response.getFirstName()).isNotNull();
@@ -101,6 +105,7 @@ class AuthServiceImplTest {
 
     @Test
     void thatNecessaryFieldsAreTurnedToLowercaseForDatabase() {
+        when(cloudService.uploadProfilePicture(any())).thenReturn(new CloudServiceResponse("www.cloudianry.com"));
         request.setUsername("JoHndoe");
         when(userAccounts.save(any(UserAccount.class))).thenReturn(saved);
         authService.registerUser(request);
@@ -113,6 +118,7 @@ class AuthServiceImplTest {
 
     @Test
     void thatPasswordIsHashedBeforeSaving(){
+        when(cloudService.uploadProfilePicture(any())).thenReturn(new CloudServiceResponse("www.cloudianry.com"));
         when(userAccounts.save(any(UserAccount.class))).thenReturn(saved);
         authService.registerUser(request);
         verify(userAccounts,  Mockito.times(1)).save(userAccountCaptor.capture());
@@ -135,6 +141,7 @@ class AuthServiceImplTest {
 
     @Test
     void thatMethodSavesAUserAccount() {
+        when(cloudService.uploadProfilePicture(any())).thenReturn(new CloudServiceResponse("www.cloudianry.com"));
         when(userAccounts.save(Mockito.any(UserAccount.class))).thenReturn(Mockito.mock(UserAccount.class));
         RegisterUserResponse register = authService.registerUser(request);
         verify(userAccounts,  Mockito.times(1)).save(Mockito.any(UserAccount.class));
@@ -223,6 +230,7 @@ class AuthServiceImplTest {
 
     @Test
     void thatExceptionIsThrownWhenAUsernameWithAnInvalidCharacter(){
+        when(cloudService.uploadProfilePicture(any())).thenReturn(new CloudServiceResponse("www.cloudianry.com"));
         request.setUsername("john*onestar");
         assertThatThrownBy(()-> authService.registerUser(request)).isInstanceOf(InvalidUsernameException.class);
         request.setUsername("john==onestar");
@@ -281,6 +289,7 @@ class AuthServiceImplTest {
 
     @Test
     void thatLastnameCanContainHyphen(){
+        when(cloudService.uploadProfilePicture(any())).thenReturn(new CloudServiceResponse("www.cloudianry.com"));
         request.setLastName("Adeniyi-Oso");
         when(userAccounts.save(any(UserAccount.class))).thenReturn(saved);
         assertDoesNotThrow(()-> authService.registerUser(request));
@@ -288,6 +297,7 @@ class AuthServiceImplTest {
 
     @Test
     void testThatGenderCannotBeNull(){
+
         request.setGender(null);
 
         assertThatThrownBy(()-> authService.registerUser(request)).isInstanceOf(InvalidGenderException.class);
@@ -318,6 +328,7 @@ class AuthServiceImplTest {
 
     @Test
     void thatLastnameIsUpdateToLowercaseBeforeBeenSavedInTheDatabase(){
+        when(cloudService.uploadProfilePicture(any())).thenReturn(new CloudServiceResponse("www.cloudianry.com"));
         when(userAccounts.save(any(UserAccount.class))).thenReturn(saved);
         ArgumentCaptor<UserAccount> captor = ArgumentCaptor.forClass(UserAccount.class);
         authService.registerUser(request);
@@ -328,6 +339,7 @@ class AuthServiceImplTest {
 
     @Test
     void thatFirstnameIsUpdateToLowercaseBeforeBeenSavedInTheDatabase(){
+        when(cloudService.uploadProfilePicture(any())).thenReturn(new CloudServiceResponse("www.cloudianry.com"));
         when(userAccounts.save(any(UserAccount.class))).thenReturn(saved);
         ArgumentCaptor<UserAccount> captor = ArgumentCaptor.forClass(UserAccount.class);
         authService.registerUser(request);
@@ -338,6 +350,7 @@ class AuthServiceImplTest {
 
     @Test
     void thatUsernameIsUpdateToLowercaseBeforeBeenSavedInTheDatabase(){
+        when(cloudService.uploadProfilePicture(any())).thenReturn(new CloudServiceResponse("www.cloudianry.com"));
         when(userAccounts.save(any(UserAccount.class))).thenReturn(saved);
         request.setUsername("JOHN");
         ArgumentCaptor<UserAccount> captor = ArgumentCaptor.forClass(UserAccount.class);
@@ -349,6 +362,7 @@ class AuthServiceImplTest {
 
     @Test
     void thatEmailIsUpdateToLowercaseBeforeBeenSavedInTheDatabase(){
+        when(cloudService.uploadProfilePicture(any())).thenReturn(new CloudServiceResponse("www.cloudianry.com"));
         when(userAccounts.save(any(UserAccount.class))).thenReturn(saved);
         request.setEmail("BOLAJIdurodola@gmail.com");
         ArgumentCaptor<UserAccount> captor = ArgumentCaptor.forClass(UserAccount.class);
@@ -360,6 +374,7 @@ class AuthServiceImplTest {
 
     @Test
     void thatPasswordIsHashed(){
+        when(cloudService.uploadProfilePicture(any())).thenReturn(new CloudServiceResponse("www.cloudianry.com"));
         when(passwordEncoder.encode(any(String.class))).thenReturn("hashed_value_123");
         when(userAccounts.save(any(UserAccount.class))).thenReturn(saved);
         authService.registerUser(request);

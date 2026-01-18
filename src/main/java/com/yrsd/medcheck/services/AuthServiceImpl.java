@@ -3,9 +3,11 @@ package com.yrsd.medcheck.services;
 import com.yrsd.medcheck.data.models.UserAccount;
 import com.yrsd.medcheck.data.repositories.UserAccounts;
 import com.yrsd.medcheck.dtos.requests.RegisterUserRequest;
+import com.yrsd.medcheck.dtos.responses.CloudServiceResponse;
 import com.yrsd.medcheck.dtos.responses.RegisterUserResponse;
 import com.yrsd.medcheck.exceptions.EmailAlreadyExistException;
 import com.yrsd.medcheck.exceptions.UsernameAlreadyExistException;
+import com.yrsd.medcheck.proxy.cloud.CloudService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -23,17 +25,24 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final UserAccounts userAccounts;
     private final ModelMapper modelMapper;
+    private final CloudService cloudService;
 
     public RegisterUserResponse registerUser(RegisterUserRequest request) {
         validate(request);
+        log.info("user {} fields validated", request.getUsername());
         mutate(request);
+        log.info("user {} fields mutated", request.getUsername());
         validateUniqueness(request);
-        UserAccount userAccount = modelMapper.map(request, UserAccount.class);
 
-        log.error(userAccount.getPassword());
+        CloudServiceResponse cloudServiceResponse = cloudService.uploadProfilePicture(request);
+
+        UserAccount userAccount = modelMapper.map(request, UserAccount.class);
+        log.info("testing user role {}", userAccount.getRole().toString());
+
         userAccount.setPassword(passwordEncoder.encode(request.getPassword()));
-        log.error(userAccount.getPassword());
+        userAccount.setProfilePictureUrl(cloudServiceResponse.getImageUrl());
         UserAccount savedUserAccount = userAccounts.save(userAccount);
+        log.info("user {} added to database", request.getUsername());
         return modelMapper.map(savedUserAccount, RegisterUserResponse.class);
     }
 
