@@ -127,14 +127,14 @@ class AuthServiceImplTest {
 
     @Test
     void thatUsernameIsUnique(){
-        when(userAccounts.doesUsernameExist(any())).thenReturn(true);
+        when(userAccounts.existsByUsername(any())).thenReturn(true);
         assertThatThrownBy(() -> authService.registerUser(request)).isInstanceOf(UsernameAlreadyExistException.class);
         verify(userAccounts,  Mockito.times(0)).save(any(UserAccount.class));
     }
 
     @Test
     void thatEmailIsUnique(){
-        when(userAccounts.doesEmailExist(any())).thenReturn(true);
+        when(userAccounts.existsByEmail(any())).thenReturn(true);
         assertThatThrownBy(() -> authService.registerUser(request)).isInstanceOf(EmailAlreadyExistException.class);
         verify(userAccounts,  Mockito.times(0)).save(any(UserAccount.class));
     }

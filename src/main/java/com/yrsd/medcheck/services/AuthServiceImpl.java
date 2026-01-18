@@ -47,10 +47,10 @@ public class AuthServiceImpl implements AuthService {
     }
 
     private void validateUniqueness(RegisterUserRequest request) {
-        if (userAccounts.doesUsernameExist(request.getUsername())) {
+        if (userAccounts.existsByUsername(request.getUsername())) {
             throw new UsernameAlreadyExistException(request.getUsername() + " already exists");
         }
-        if (userAccounts.doesEmailExist(request.getEmail())) {
+        if (userAccounts.existsByEmail(request.getEmail())) {
             throw new EmailAlreadyExistException(request.getEmail() + " already exists");
         }
     }
