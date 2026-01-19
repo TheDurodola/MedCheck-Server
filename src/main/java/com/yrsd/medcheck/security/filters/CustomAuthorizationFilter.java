@@ -4,6 +4,7 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.yrsd.medcheck.data.models.enums.AccountStatus;
 import com.yrsd.medcheck.data.models.enums.Role;
 import com.yrsd.medcheck.security.dtos.responses.UserAccountResponse;
 import com.yrsd.medcheck.services.UserAccountService;
@@ -56,8 +57,10 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
                 UserAccountResponse userAccountBy = userAccountService.getUserAccountBy(username);
 
                 Role role = userAccountBy.getRole();
+                AccountStatus accountStatus = userAccountBy.getAccountStatus();
                 List<SimpleGrantedAuthority> accountRole = new ArrayList<>();
                 accountRole.add(new SimpleGrantedAuthority(role.name()));
+                accountRole.add(new SimpleGrantedAuthority(accountStatus.name()));
                 Authentication auth = new UsernamePasswordAuthenticationToken(userAccountBy.getUsername(), null, accountRole);
                 SecurityContextHolder.getContext().setAuthentication(auth);
                 log.info("Authorization Completed");

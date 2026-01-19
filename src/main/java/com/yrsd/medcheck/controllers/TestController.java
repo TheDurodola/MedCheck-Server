@@ -12,4 +12,21 @@ public class TestController {
         return ResponseEntity.ok("We are fucking live");
     }
 
+    @GetMapping("/test/live/consumer")
+    public ResponseEntity<String> testConsumer() {
+        return ResponseEntity.ok("You are a consumer and you are active yami");
+    }
+
+
+    @GetMapping("/test/live/wholesaler")
+    public ResponseEntity<String> testWholesaler() {
+        return ResponseEntity.ok("We are fucking live");
+    }
+
+    @GetMapping("/test/live/investigator")
+    public ResponseEntity<String> testInvestigator() {
+        return ResponseEntity.ok("We are fucking live");
+    }
+
+
 }

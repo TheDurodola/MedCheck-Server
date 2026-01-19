@@ -29,7 +29,7 @@ public class SecurityFilterChainConfiguration {
                 .authorizeHttpRequests(c->
                         c.requestMatchers(HttpMethod.POST, "/api/v1/auth/signin").permitAll())
                 .authorizeHttpRequests(c->
-                        c.requestMatchers("/api/v1/consumer/**").hasAuthority("CONSUMER"))
+                        c.requestMatchers("/api/v1/consumer/**").hasAllAuthorities("CONSUMER", "ACTIVE"))
                 .authorizeHttpRequests(c->
                         c.requestMatchers("/api/v1/retailer/**").hasAuthority("RETAILER"))
                 .authorizeHttpRequests(c->
@@ -43,8 +43,10 @@ public class SecurityFilterChainConfiguration {
                                 .hasAnyAuthority("INVESTIGATOR", "MANUFACTURER", "RETAILER", "WHOLESALER"))
                 .authorizeHttpRequests(c->
                         c.requestMatchers(HttpMethod.GET, "/test/live").permitAll())
+                .authorizeHttpRequests(c->
+                        c.requestMatchers(HttpMethod.GET, "/test/live/consumer").hasAuthority("CONSUMER"))
                 .authorizeHttpRequests(c->c.anyRequest().authenticated())
                 .build();
-        
+
     }
 }
