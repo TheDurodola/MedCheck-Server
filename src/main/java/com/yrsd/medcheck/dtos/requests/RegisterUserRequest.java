@@ -2,6 +2,7 @@ package com.yrsd.medcheck.dtos.requests;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
@@ -9,7 +10,6 @@ import java.time.LocalDate;
 @Setter
 @Getter
 public class RegisterUserRequest {
-
     private String username;
     private String firstName;
     private String lastName;
@@ -20,9 +20,6 @@ public class RegisterUserRequest {
     private String nationalIdentityNumber;
     private String gender;
     private String role;
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate dateOfBirth;
-    private MultipartFile profilePicture;
-
-
-
 }

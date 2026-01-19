@@ -29,7 +29,7 @@ public class Validator {
         validateGender(request);
         validateUsername(request);
         validateDateOfBirth(request);
-        validateProfilePicture(request);
+//        validateProfilePicture(request);
     }
 
     private static void validateNames(RegisterUserRequest request) {
@@ -47,23 +47,23 @@ public class Validator {
         };
     }
 
-    private static void validateProfilePicture( RegisterUserRequest request)  {
-        if (request.getProfilePicture() == null || request.getProfilePicture().isEmpty()){
-            throw new InvalidProfilePictureException("The Profile Picture field cannot be null");
-        }
-
-        try {
-            String fileType = tika.detect(request.getProfilePicture().getInputStream());
-
-            if (!ALLOWED_MIME_TYPES.contains(fileType)) {
-                log.warn("User {} attempted to upload a invalid file type: {}", request.getEmail(), fileType);
-                throw new InvalidProfilePictureException("Invalid file type: " + fileType);
-            }
-
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
+//    private static void validateProfilePicture( RegisterUserRequest request)  {
+//        if (request.getProfilePicture() == null || request.getProfilePicture().isEmpty()){
+//            throw new InvalidProfilePictureException("The Profile Picture field cannot be null");
+//        }
+//
+//        try {
+//            String fileType = tika.detect(request.getProfilePicture().getInputStream());
+//
+//            if (!ALLOWED_MIME_TYPES.contains(fileType)) {
+//                log.warn("User {} attempted to upload a invalid file type: {}", request.getEmail(), fileType);
+//                throw new InvalidProfilePictureException("Invalid file type: " + fileType);
+//            }
+//
+//        } catch (IOException e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
 
     private static void validateDateOfBirth( RegisterUserRequest request) {
         if (request.getDateOfBirth() == null){

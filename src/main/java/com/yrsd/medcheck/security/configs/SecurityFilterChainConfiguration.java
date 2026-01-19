@@ -22,8 +22,9 @@ public class SecurityFilterChainConfiguration {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .addFilterAt(oncePerRequestFilter, UsernamePasswordAuthenticationFilter.class)
-                .authorizeHttpRequests((c) -> c.requestMatchers(HttpMethod.POST, "/api/v1/auth/signup"))
-                .authorizeHttpRequests(c->c.requestMatchers(HttpMethod.POST, "/api/v1/auth/signin"))
+                .authorizeHttpRequests((c) -> c.requestMatchers(HttpMethod.POST, "/api/v1/auth/signup").permitAll())
+                .authorizeHttpRequests(c->c.requestMatchers(HttpMethod.POST, "/api/v1/auth/signin").permitAll())
+                .authorizeHttpRequests(c->c.requestMatchers(HttpMethod.GET, "/test/live").permitAll())
                 .authorizeHttpRequests(c->c.anyRequest().authenticated())
                 .build();
     }

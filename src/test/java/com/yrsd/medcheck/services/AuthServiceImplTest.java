@@ -78,7 +78,7 @@ class AuthServiceImplTest {
                 "image/jpeg",
                 jpegSignature
         );
-        request.setProfilePicture(validImageFile);
+//        request.setProfilePicture(validImageFile);
 
         saved = modelMapper.map(request, UserAccount.class);
 
@@ -165,12 +165,12 @@ class AuthServiceImplTest {
         request.setDateOfBirth(null);
         assertThatThrownBy(()  -> authService.registerUser(request)).isInstanceOf(InvalidDateOfBirthException.class);
     }
-
-    @Test
-    void thatMethodThrowsExceptionWhenANullProfilePictureIsSent(){
-        request.setProfilePicture(null);
-        assertThatThrownBy(()-> authService.registerUser(request)).isInstanceOf(InvalidProfilePictureException.class);
-    }
+//
+//    @Test
+//    void thatMethodThrowsExceptionWhenANullProfilePictureIsSent(){
+//        request.setProfilePicture(null);
+//        assertThatThrownBy(()-> authService.registerUser(request)).isInstanceOf(InvalidProfilePictureException.class);
+//    }
 
 
     @Test
@@ -262,18 +262,18 @@ class AuthServiceImplTest {
     }
 
 
-    @Test
-    void thatOnlyImageFileAreAccepted(){
-        byte[] pdfSignature = new byte[]{ 0x25, 0x50, 0x44, 0x46, 0x2D };
-        MockMultipartFile pdfFile = new MockMultipartFile(
-                "profilePicture",
-                "contract.pdf",
-                "application/pdf",
-                pdfSignature
-        );
-        request.setProfilePicture(pdfFile);
-        assertThatThrownBy(()->  authService.registerUser(request)).isInstanceOf(InvalidProfilePictureException.class);
-    }
+//    @Test
+//    void thatOnlyImageFileAreAccepted(){
+//        byte[] pdfSignature = new byte[]{ 0x25, 0x50, 0x44, 0x46, 0x2D };
+//        MockMultipartFile pdfFile = new MockMultipartFile(
+//                "profilePicture",
+//                "contract.pdf",
+//                "application/pdf",
+//                pdfSignature
+//        );
+//        request.setProfilePicture(pdfFile);
+//        assertThatThrownBy(()->  authService.registerUser(request)).isInstanceOf(InvalidProfilePictureException.class);
+//    }
 
     @Test
     void thatFirstnameCannotConsistOfDigits(){

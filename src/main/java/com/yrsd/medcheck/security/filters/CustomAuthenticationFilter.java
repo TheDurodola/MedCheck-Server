@@ -11,6 +11,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.EqualsAndHashCode;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Primary;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -24,9 +25,9 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.Objects;
 
+@Slf4j
 @Component
 @Primary
-@EqualsAndHashCode
 public class CustomAuthenticationFilter extends OncePerRequestFilter {
 
     private final AuthenticationManager authenticationManager;
@@ -46,8 +47,9 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
         boolean isSignInPath = path.equals("/api/v1/auth/sigin");
         if (!isSignInPath){
             filterChain.doFilter(request,response);
+            return;
         }
-
+        log.info("Authentication required");
         InputStream inputStream = request.getInputStream();
         SignInRequest signInRequest = objectMapper.readValue(inputStream, SignInRequest.class);
 

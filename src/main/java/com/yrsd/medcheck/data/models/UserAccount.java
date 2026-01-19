@@ -52,7 +52,7 @@ public class UserAccount {
     @Enumerated(EnumType.STRING)
     private Role role;
 
-    @Column( nullable = false)
+    @Column(nullable = true)
     private String profilePictureUrl;
 
     @Column(nullable = false)
