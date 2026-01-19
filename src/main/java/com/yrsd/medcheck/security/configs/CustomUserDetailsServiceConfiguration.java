@@ -30,7 +30,7 @@ public class CustomUserDetailsServiceConfiguration implements UserDetailsService
             authorities.add(new SimpleGrantedAuthority(response.getRole().name()));
             return new User(response.getUsername(), response.getPassword(), authorities);
         } catch (AccountNotFoundException e) {
-            throw new RuntimeException(e);
+            throw new UsernameNotFoundException(e.getMessage());
         }
     }
 }

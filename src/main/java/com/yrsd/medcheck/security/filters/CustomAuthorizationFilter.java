@@ -3,6 +3,7 @@ package com.yrsd.medcheck.security.filters;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yrsd.medcheck.data.models.enums.Role;
 import com.yrsd.medcheck.security.dtos.responses.UserAccountResponse;
 import com.yrsd.medcheck.services.UserAccountService;
@@ -32,6 +33,7 @@ import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 public class CustomAuthorizationFilter extends OncePerRequestFilter {
 
     private final UserAccountService  userAccountService;
+    private final ObjectMapper objectMapper;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -72,11 +74,11 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
         error.put("error", "Invalid JWT");
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("application/json");
-        response.getOutputStream().write(error.toString().getBytes());
+        response.getOutputStream().write(objectMapper.writeValueAsBytes(error));
         response.flushBuffer();
     }
 
     private static boolean isPublicApi(HttpServletRequest request) {
-        return request.getServletPath().equals("/api/v1/auth/signin") || request.getServletPath().equals("/api/v1/auth/signup");
+        return request.getServletPath().equals("/api/v1/auth/signin") || request.getServletPath().equals("/api/v1/auth/signup") || request.getServletPath().equals("/test/live");
     }
 }

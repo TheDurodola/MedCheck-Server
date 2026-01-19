@@ -1,5 +1,6 @@
 package com.yrsd.medcheck.security.providers;
 
+import com.yrsd.medcheck.exceptions.InvalidPasswordException;
 import com.yrsd.medcheck.security.auth.CustomAuthentication;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
@@ -30,7 +31,7 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
         if (!passwordEncoder.matches(inputtedPassword, userDetails.getPassword())) {
-            throw new BadCredentialsException("Invalid password");
+            throw new BadCredentialsException("Invalid Password");
         }
         return new CustomAuthentication(username, true, userDetails.getAuthorities());
     }
