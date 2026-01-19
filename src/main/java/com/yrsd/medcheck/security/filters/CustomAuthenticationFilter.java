@@ -13,6 +13,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Primary;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
@@ -34,7 +35,7 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
     private final ObjectMapper objectMapper;
     private final String signingKey;
 
-    public CustomAuthenticationFilter(AuthenticationManager authenticationManager, ObjectMapper objectMapper, @Value("${jwt.signing.key}")  String signingKey) {
+    public CustomAuthenticationFilter(@Lazy AuthenticationManager authenticationManager, ObjectMapper objectMapper, @Value("${jwt.signing.key}")  String signingKey) {
         this.authenticationManager = authenticationManager;
         this.objectMapper = objectMapper;
         this.signingKey = signingKey;
