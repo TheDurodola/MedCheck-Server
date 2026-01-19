@@ -45,7 +45,7 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String path = request.getServletPath();
 
-        boolean isSignInPath = path.equals("/api/v1/auth/sigin");
+        boolean isSignInPath = path.equals("/api/v1/auth/signin");
         if (!isSignInPath){
             filterChain.doFilter(request,response);
             return;
@@ -70,7 +70,7 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
         response.getOutputStream()
                 .write(objectMapper.writeValueAsBytes(signInResponse));
         response.flushBuffer();
-        filterChain.doFilter(request, response);
+//        filterChain.doFilter(request, response);
 
     }
 }
