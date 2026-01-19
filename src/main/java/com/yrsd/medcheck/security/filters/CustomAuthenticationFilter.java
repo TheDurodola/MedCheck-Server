@@ -70,6 +70,7 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
         response.getOutputStream()
                 .write(objectMapper.writeValueAsBytes(signInResponse));
         response.flushBuffer();
+        log.info("Authentication successful");
 //        filterChain.doFilter(request, response);
 
     }

@@ -18,7 +18,6 @@ public class MapperConfig {
         configureForUserAccountToRegisterUserResponse(modelMapper);
         configureForRegisterUserRequestToUserAccount(modelMapper);
 
-
         configureMatchingStrategy(modelMapper);
 
         return modelMapper;
