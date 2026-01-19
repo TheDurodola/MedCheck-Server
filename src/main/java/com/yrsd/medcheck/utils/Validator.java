@@ -29,7 +29,7 @@ public class Validator {
         validateGender(request);
         validateUsername(request);
         validateDateOfBirth(request);
-//        validateProfilePicture(request);
+        validateNationalIdentityNUmber(request);
     }
 
     private static void validateNames(RegisterUserRequest request) {
@@ -45,37 +45,6 @@ public class Validator {
         if (request.chars().anyMatch(Character::isDigit)) {
             throw new InvalidNameException(message + " cannot contain digits");
         };
-    }
-
-//    private static void validateProfilePicture( RegisterUserRequest request)  {
-//        if (request.getProfilePicture() == null || request.getProfilePicture().isEmpty()){
-//            throw new InvalidProfilePictureException("The Profile Picture field cannot be null");
-//        }
-//
-//        try {
-//            String fileType = tika.detect(request.getProfilePicture().getInputStream());
-//
-//            if (!ALLOWED_MIME_TYPES.contains(fileType)) {
-//                log.warn("User {} attempted to upload a invalid file type: {}", request.getEmail(), fileType);
-//                throw new InvalidProfilePictureException("Invalid file type: " + fileType);
-//            }
-//
-//        } catch (IOException e) {
-//            throw new RuntimeException(e);
-//        }
-//    }
-
-    private static void validateDateOfBirth( RegisterUserRequest request) {
-        if (request.getDateOfBirth() == null){
-            throw new InvalidDateOfBirthException("The Date of Birth field cannot be null");
-        }
-        Period period = Period.between(request.getDateOfBirth(), LocalDate.now());
-        if (period.getYears() <= 12){
-            throw new InvalidDateOfBirthException("Must be older than 12 years old");
-        }
-        if (period.getYears() >= 100){
-            throw new InvalidDateOfBirthException("Must be younger than 100 years old");
-        }
     }
 
     private static void validateUsername( RegisterUserRequest request) {
@@ -131,4 +100,40 @@ public class Validator {
             throw new InvalidPasswordException("Password must contain at least one digit character");
         }
     }
+
+    private static void validateNationalIdentityNUmber(RegisterUserRequest request){
+        if (!(request.getNationalIdentityNumber().length() == 12)){
+            throw new InvalidNationalIdentityNumberException("NIN must be 12 digits long");
+        }
+    }
+    private static void validateDateOfBirth( RegisterUserRequest request) {
+        if (request.getDateOfBirth() == null){
+            throw new InvalidDateOfBirthException("The Date of Birth field cannot be null");
+        }
+        Period period = Period.between(request.getDateOfBirth(), LocalDate.now());
+        if (period.getYears() <= 12){
+            throw new InvalidDateOfBirthException("Must be older than 12 years old");
+        }
+        if (period.getYears() >= 100){
+            throw new InvalidDateOfBirthException("Must be younger than 100 years old");
+        }
+    }
+
+    //    private static void validateProfilePicture( RegisterUserRequest request)  {
+//        if (request.getProfilePicture() == null || request.getProfilePicture().isEmpty()){
+//            throw new InvalidProfilePictureException("The Profile Picture field cannot be null");
+//        }
+//
+//        try {
+//            String fileType = tika.detect(request.getProfilePicture().getInputStream());
+//
+//            if (!ALLOWED_MIME_TYPES.contains(fileType)) {
+//                log.warn("User {} attempted to upload a invalid file type: {}", request.getEmail(), fileType);
+//                throw new InvalidProfilePictureException("Invalid file type: " + fileType);
+//            }
+//
+//        } catch (IOException e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
 }

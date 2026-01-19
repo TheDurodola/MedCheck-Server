@@ -1,6 +1,9 @@
 package com.yrsd.medcheck.services;
 
+import com.cloudinary.provisioning.Account;
 import com.yrsd.medcheck.data.models.UserAccount;
+import com.yrsd.medcheck.data.models.enums.AccountStatus;
+import com.yrsd.medcheck.data.models.enums.Role;
 import com.yrsd.medcheck.data.repositories.UserAccounts;
 import com.yrsd.medcheck.dtos.requests.RegisterUserRequest;
 import com.yrsd.medcheck.dtos.requests.UploadProfilePictureRequest;
@@ -40,12 +43,14 @@ public class AuthServiceImpl implements AuthService {
         log.info("testing user role {}", userAccount.getRole().toString());
 
         userAccount.setPassword(passwordEncoder.encode(request.getPassword()));
-        userAccount.setProfilePictureUrl("https://res.cloudinary.com/ds1mdqmb9/image/upload/v1768808219/Twitter_default_profile_400x400_pwdjbz.png");
+        mutate(userAccount);
 
         UserAccount savedUserAccount = userAccounts.save(userAccount);
         log.info("user {} added to database", request.getUsername());
         return modelMapper.map(savedUserAccount, RegisterUserResponse.class);
     }
+
+
 
 //    public UploadProfilePictureResponse uploadProfilePicture(UploadProfilePictureRequest request){
 //        CloudServiceResponse cloudServiceResponse = cloudService.uploadProfilePicture(request);
