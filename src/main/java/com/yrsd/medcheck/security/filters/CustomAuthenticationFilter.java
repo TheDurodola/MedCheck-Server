@@ -35,7 +35,7 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
     private final ObjectMapper objectMapper;
     private final String signingKey;
 
-    public CustomAuthenticationFilter(@Lazy AuthenticationManager authenticationManager, ObjectMapper objectMapper, @Value("${jwt.signing.key}")  String signingKey) {
+    public CustomAuthenticationFilter(AuthenticationManager authenticationManager, ObjectMapper objectMapper, @Value("${jwt.signing.key}")  String signingKey) {
         this.authenticationManager = authenticationManager;
         this.objectMapper = objectMapper;
         this.signingKey = signingKey;
