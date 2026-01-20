@@ -18,17 +18,16 @@ public class Pack {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-
-    private String name;
-
-    private String description;
-
     @Column(unique = true, nullable = false)
     private String verificationCode;
 
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "pack_id")
     private List<Tablet> tablets;
+
+    @ManyToOne
+    @JoinColumn(name = "drug_id")
+    private Drug drug;
 
     @CreatedDate
     @Column(nullable = false, updatable = false)

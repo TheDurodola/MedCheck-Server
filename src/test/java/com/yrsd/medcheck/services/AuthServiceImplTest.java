@@ -40,7 +40,7 @@ class AuthServiceImplTest {
     private PasswordEncoder passwordEncoder;
 
     @Mock
-    private CloudService  cloudService;
+    private CloudService cloudService;
 
     @Mock
     private UserAccounts userAccounts;
@@ -62,8 +62,8 @@ class AuthServiceImplTest {
         request = new RegisterUserRequest();
         request.setDateOfBirth(LocalDate.of(2000, 1, 1));
         request.setGender("MALE");
-        request.setNationalIdentityNumber("123456789");
-        request.setRole("ROLE_CONSUMER");
+        request.setNationalIdentityNumber("123456789012");
+        request.setRole("CONSUMER");
         request.setPhone("123456789");
         request.setEmail("johndoe@gmail.com");
         request.setUsername("johndoe");
@@ -71,32 +71,21 @@ class AuthServiceImplTest {
         request.setFirstName("John");
         request.setLastName("Doe");
         request.setMiddleName("John");
-        byte[] jpegSignature = new byte[]{(byte) 0xFF, (byte) 0xD8, (byte) 0xFF};
-        MockMultipartFile validImageFile = new MockMultipartFile(
-                "profilePicture",
-                "test-image.jpg",
-                "image/jpeg",
-                jpegSignature
-        );
-//        request.setProfilePicture(validImageFile);
-
         saved = modelMapper.map(request, UserAccount.class);
 
     }
 
 
-
     @Test
     void saveAUserAccount() {
-        when(cloudService.uploadProfilePicture(any())).thenReturn(new CloudServiceResponse("www.cloudianry.com"));
         when(userAccounts.save(any(UserAccount.class))).thenReturn(new UserAccount());
         authService.registerUser(request);
-        verify(userAccounts,  Mockito.times(1)).save(Mockito.any(UserAccount.class));
+        verify(userAccounts, Mockito.times(1)).save(Mockito.any(UserAccount.class));
     }
 
     @Test
     void returnTheRightResponse() {
-        when(cloudService.uploadProfilePicture(any())).thenReturn(new CloudServiceResponse("www.cloudianry.com"));
+        
         when(userAccounts.save(any(UserAccount.class))).thenReturn(saved);
         RegisterUserResponse response = authService.registerUser(request);
         assertThat(response.getFirstName()).isNotNull();
@@ -105,11 +94,11 @@ class AuthServiceImplTest {
 
     @Test
     void thatNecessaryFieldsAreTurnedToLowercaseForDatabase() {
-        when(cloudService.uploadProfilePicture(any())).thenReturn(new CloudServiceResponse("www.cloudianry.com"));
+        
         request.setUsername("JoHndoe");
         when(userAccounts.save(any(UserAccount.class))).thenReturn(saved);
         authService.registerUser(request);
-        verify(userAccounts,  Mockito.times(1)).save(userAccountCaptor.capture());
+        verify(userAccounts, Mockito.times(1)).save(userAccountCaptor.capture());
         assertThat(userAccountCaptor.getValue().getFirstName()).isEqualTo("john");
         assertThat(userAccountCaptor.getValue().getLastName()).isEqualTo("doe");
         assertThat(userAccountCaptor.getValue().getUsername()).isEqualTo("johndoe");
@@ -117,53 +106,53 @@ class AuthServiceImplTest {
     }
 
     @Test
-    void thatPasswordIsHashedBeforeSaving(){
-        when(cloudService.uploadProfilePicture(any())).thenReturn(new CloudServiceResponse("www.cloudianry.com"));
+    void thatPasswordIsHashedBeforeSaving() {
+        
         when(userAccounts.save(any(UserAccount.class))).thenReturn(saved);
         authService.registerUser(request);
-        verify(userAccounts,  Mockito.times(1)).save(userAccountCaptor.capture());
+        verify(userAccounts, Mockito.times(1)).save(userAccountCaptor.capture());
         assertThat(userAccountCaptor.getValue().getPassword()).isNotEqualTo("Password123");
     }
 
     @Test
-    void thatUsernameIsUnique(){
+    void thatUsernameIsUnique() {
         when(userAccounts.existsByUsername(any())).thenReturn(true);
         assertThatThrownBy(() -> authService.registerUser(request)).isInstanceOf(UsernameAlreadyExistException.class);
-        verify(userAccounts,  Mockito.times(0)).save(any(UserAccount.class));
+        verify(userAccounts, Mockito.times(0)).save(any(UserAccount.class));
     }
 
     @Test
-    void thatEmailIsUnique(){
+    void thatEmailIsUnique() {
         when(userAccounts.existsByEmail(any())).thenReturn(true);
         assertThatThrownBy(() -> authService.registerUser(request)).isInstanceOf(EmailAlreadyExistException.class);
-        verify(userAccounts,  Mockito.times(0)).save(any(UserAccount.class));
+        verify(userAccounts, Mockito.times(0)).save(any(UserAccount.class));
     }
 
     @Test
     void thatMethodSavesAUserAccount() {
-        when(cloudService.uploadProfilePicture(any())).thenReturn(new CloudServiceResponse("www.cloudianry.com"));
+        
         when(userAccounts.save(Mockito.any(UserAccount.class))).thenReturn(Mockito.mock(UserAccount.class));
         RegisterUserResponse register = authService.registerUser(request);
-        verify(userAccounts,  Mockito.times(1)).save(Mockito.any(UserAccount.class));
+        verify(userAccounts, Mockito.times(1)).save(Mockito.any(UserAccount.class));
     }
 
     @Test
-    void thatMethodThrowsExceptionWhenAnNullFirstnameIsSent(){
+    void thatMethodThrowsExceptionWhenAnNullFirstnameIsSent() {
 
         request.setFirstName(null);
-        assertThatThrownBy(()-> authService.registerUser(request)).isInstanceOf(InvalidNameException.class);
+        assertThatThrownBy(() -> authService.registerUser(request)).isInstanceOf(InvalidNameException.class);
     }
 
     @Test
-    void thatMethodThrowsExceptionWhenANullLastNameIsSent(){
+    void thatMethodThrowsExceptionWhenANullLastNameIsSent() {
         request.setLastName(null);
-        assertThatThrownBy(()-> authService.registerUser(request)).isInstanceOf(InvalidNameException.class);
+        assertThatThrownBy(() -> authService.registerUser(request)).isInstanceOf(InvalidNameException.class);
     }
 
     @Test
-    void thatMethodThrowsExceptionWhenANullDateOfBirthIsSent(){
+    void thatMethodThrowsExceptionWhenANullDateOfBirthIsSent() {
         request.setDateOfBirth(null);
-        assertThatThrownBy(()  -> authService.registerUser(request)).isInstanceOf(InvalidDateOfBirthException.class);
+        assertThatThrownBy(() -> authService.registerUser(request)).isInstanceOf(InvalidDateOfBirthException.class);
     }
 //
 //    @Test
@@ -174,91 +163,91 @@ class AuthServiceImplTest {
 
 
     @Test
-    void thatMethodThrowsExceptionWhenANullEmailIsSent(){
+    void thatMethodThrowsExceptionWhenANullEmailIsSent() {
         request.setEmail(null);
-        assertThatThrownBy(()-> authService.registerUser(request)).isInstanceOf(InvalidEmailException.class);
+        assertThatThrownBy(() -> authService.registerUser(request)).isInstanceOf(InvalidEmailException.class);
     }
 
     @Test
-    void thatMethodThrowsExceptionWhenANullUsernameIsSent(){
+    void thatMethodThrowsExceptionWhenANullUsernameIsSent() {
         request.setUsername(null);
-        assertThatThrownBy(()-> authService.registerUser(request)).isInstanceOf(InvalidUsernameException.class);
+        assertThatThrownBy(() -> authService.registerUser(request)).isInstanceOf(InvalidUsernameException.class);
     }
 
 
     @Test
-    void thatMethodThrowsExceptionWhenANullPasswordIsSent(){
+    void thatMethodThrowsExceptionWhenANullPasswordIsSent() {
         request.setPassword(null);
-        assertThatThrownBy(()-> authService.registerUser(request)).isInstanceOf(InvalidPasswordException.class);
+        assertThatThrownBy(() -> authService.registerUser(request)).isInstanceOf(InvalidPasswordException.class);
     }
 
     @Test
-    void thatMethodThrowsExceptionWhenANullGenderIsSent(){
+    void thatMethodThrowsExceptionWhenANullGenderIsSent() {
         request.setGender(null);
-        assertThatThrownBy(()-> authService.registerUser(request)).isInstanceOf(InvalidGenderException.class);
+        assertThatThrownBy(() -> authService.registerUser(request)).isInstanceOf(InvalidGenderException.class);
     }
 
     @Test
-    void thatMethodPasswordMustBeMoreThanSixDigits(){
+    void thatMethodPasswordMustBeMoreThanSixDigits() {
         request.setPassword("Passw");
-        assertThatThrownBy(()-> authService.registerUser(request)).isInstanceOf(InvalidPasswordException.class);
+        assertThatThrownBy(() -> authService.registerUser(request)).isInstanceOf(InvalidPasswordException.class);
     }
 
     @Test
-    void thatExceptionIsThrownIfPasswordDoesntHaveAUpperCaseCharacter(){
+    void thatExceptionIsThrownIfPasswordDoesntHaveAUpperCaseCharacter() {
         request.setPassword("password123");
-        assertThatThrownBy(()-> authService.registerUser(request)).isInstanceOf(InvalidPasswordException.class);
+        assertThatThrownBy(() -> authService.registerUser(request)).isInstanceOf(InvalidPasswordException.class);
     }
 
     @Test
-    void thatExceptionIsThrownIfPasswordDoesntHaveANumberCharacter(){
+    void thatExceptionIsThrownIfPasswordDoesntHaveANumberCharacter() {
         request.setPassword("Password");
-        assertThatThrownBy(()-> authService.registerUser(request)).isInstanceOf(InvalidPasswordException.class);
+        assertThatThrownBy(() -> authService.registerUser(request)).isInstanceOf(InvalidPasswordException.class);
     }
 
     @Test
-    void thatExceptionIsThrownIfPasswordConsistOfOnlySpace(){
+    void thatExceptionIsThrownIfPasswordConsistOfOnlySpace() {
         request.setPassword("       ");
-        assertThatThrownBy(()-> authService.registerUser(request)).isInstanceOf(InvalidPasswordException.class);
+        assertThatThrownBy(() -> authService.registerUser(request)).isInstanceOf(InvalidPasswordException.class);
     }
 
     @Test
-    void thatExceptionIsThrownIfUsernameIsLessThan4Characters(){
+    void thatExceptionIsThrownIfUsernameIsLessThan4Characters() {
         request.setUsername("jon");
-        assertThatThrownBy(()-> authService.registerUser(request)).isInstanceOf(InvalidUsernameException.class);
+        assertThatThrownBy(() -> authService.registerUser(request)).isInstanceOf(InvalidUsernameException.class);
     }
 
     @Test
-    void thatExceptionIsThrownWhenAUsernameWithAnInvalidCharacter(){
-        when(cloudService.uploadProfilePicture(any())).thenReturn(new CloudServiceResponse("www.cloudianry.com"));
+    void thatExceptionIsThrownWhenAUsernameWithAnInvalidCharacter() {
+        
         request.setUsername("john*onestar");
-        assertThatThrownBy(()-> authService.registerUser(request)).isInstanceOf(InvalidUsernameException.class);
+        assertThatThrownBy(() -> authService.registerUser(request)).isInstanceOf(InvalidUsernameException.class);
         request.setUsername("john==onestar");
-        assertThatThrownBy(()-> authService.registerUser(request)).isInstanceOf(InvalidUsernameException.class);
+        assertThatThrownBy(() -> authService.registerUser(request)).isInstanceOf(InvalidUsernameException.class);
         request.setUsername("john#onestar");
-        assertThatThrownBy(()-> authService.registerUser(request)).isInstanceOf(InvalidUsernameException.class);
+        assertThatThrownBy(() -> authService.registerUser(request)).isInstanceOf(InvalidUsernameException.class);
         request.setUsername("john$%5onestar");
-        assertThatThrownBy(()-> authService.registerUser(request)).isInstanceOf(InvalidUsernameException.class);
+        assertThatThrownBy(() -> authService.registerUser(request)).isInstanceOf(InvalidUsernameException.class);
         request.setUsername("#johnonestar");
-        assertThatThrownBy(()-> authService.registerUser(request)).isInstanceOf(InvalidUsernameException.class);
+        assertThatThrownBy(() -> authService.registerUser(request)).isInstanceOf(InvalidUsernameException.class);
         request.setUsername("john_boj");
         when(userAccounts.save(any(UserAccount.class))).thenReturn(saved);
-        assertDoesNotThrow(()-> authService.registerUser(request));
+        assertDoesNotThrow(() -> authService.registerUser(request));
     }
 
 
     @Test
-    void thatUserMustBeAbove12YearsOfAge(){
+    void thatUserMustBeAbove12YearsOfAge() {
         request.setDateOfBirth(LocalDate.now().minusYears(11));
-        assertThatThrownBy(()-> authService.registerUser(request)).isInstanceOf(InvalidDateOfBirthException.class);
+        assertThatThrownBy(() -> authService.registerUser(request)).isInstanceOf(InvalidDateOfBirthException.class);
         request.setDateOfBirth(LocalDate.now().minusYears(12));
-        assertThatThrownBy(()-> authService.registerUser(request)).isInstanceOf(InvalidDateOfBirthException.class);
+        assertThatThrownBy(() -> authService.registerUser(request)).isInstanceOf(InvalidDateOfBirthException.class);
     }
 
     @Test
-    void thatUserMustBeBelow100YearsOfAge(){
+    void thatUserMustBeBelow100YearsOfAge() {
         request.setDateOfBirth(LocalDate.now().minusYears(110));
-        assertThatThrownBy(()-> authService.registerUser(request)).isInstanceOf(InvalidDateOfBirthException.class);
+        assertThatThrownBy(() -> authService.registerUser(request)).isInstanceOf(InvalidDateOfBirthException.class);
     }
 
 
@@ -276,59 +265,60 @@ class AuthServiceImplTest {
 //    }
 
     @Test
-    void thatFirstnameCannotConsistOfDigits(){
+    void thatFirstnameCannotConsistOfDigits() {
         request.setFirstName("John1");
-        assertThatThrownBy(()-> authService.registerUser(request)).isInstanceOf(InvalidNameException.class);
+        assertThatThrownBy(() -> authService.registerUser(request)).isInstanceOf(InvalidNameException.class);
     }
 
     @Test
-    void thatLastnameCannotConsistOfDigits(){
+    void thatLastnameCannotConsistOfDigits() {
         request.setLastName("John2");
-        assertThatThrownBy(()-> authService.registerUser(request)).isInstanceOf(InvalidNameException.class);
+        assertThatThrownBy(() -> authService.registerUser(request)).isInstanceOf(InvalidNameException.class);
     }
 
     @Test
-    void thatLastnameCanContainHyphen(){
-        when(cloudService.uploadProfilePicture(any())).thenReturn(new CloudServiceResponse("www.cloudianry.com"));
+    void thatLastnameCanContainHyphen() {
+        
         request.setLastName("Adeniyi-Oso");
         when(userAccounts.save(any(UserAccount.class))).thenReturn(saved);
-        assertDoesNotThrow(()-> authService.registerUser(request));
+        assertDoesNotThrow(() -> authService.registerUser(request));
     }
 
     @Test
-    void testThatGenderCannotBeNull(){
+    void testThatGenderCannotBeNull() {
 
         request.setGender(null);
 
-        assertThatThrownBy(()-> authService.registerUser(request)).isInstanceOf(InvalidGenderException.class);
+        assertThatThrownBy(() -> authService.registerUser(request)).isInstanceOf(InvalidGenderException.class);
     }
 
     @Test
-    void thatGenderCannotBeEmpty(){
+    void thatGenderCannotBeEmpty() {
         request.setGender(" ");
-        assertThatThrownBy(()-> authService.registerUser(request)).isInstanceOf(InvalidGenderException.class);
+        assertThatThrownBy(() -> authService.registerUser(request)).isInstanceOf(InvalidGenderException.class);
     }
 
     @Test
-    void thatEmailMustContainAtSign(){
+    void thatEmailMustContainAtSign() {
         request.setEmail("bolajidurodolagmail.com");
-        assertThatThrownBy(()-> authService.registerUser(request)).isInstanceOf(InvalidEmailException.class);
+        assertThatThrownBy(() -> authService.registerUser(request)).isInstanceOf(InvalidEmailException.class);
     }
+
     @Test
-    void thatEmailCannotContainDoubleAtSign(){
+    void thatEmailCannotContainDoubleAtSign() {
         request.setEmail("bolajidurodola@@gmail.com");
-        assertThatThrownBy(()-> authService.registerUser(request)).isInstanceOf(InvalidEmailException.class);
+        assertThatThrownBy(() -> authService.registerUser(request)).isInstanceOf(InvalidEmailException.class);
     }
 
     @Test
-    void thatEmailCannotBeEmpty(){
+    void thatEmailCannotBeEmpty() {
         request.setEmail("bolajidurodola@gmail");
-        assertThatThrownBy(()-> authService.registerUser(request)).isInstanceOf(InvalidEmailException.class);
+        assertThatThrownBy(() -> authService.registerUser(request)).isInstanceOf(InvalidEmailException.class);
     }
 
     @Test
-    void thatLastnameIsUpdateToLowercaseBeforeBeenSavedInTheDatabase(){
-        when(cloudService.uploadProfilePicture(any())).thenReturn(new CloudServiceResponse("www.cloudianry.com"));
+    void thatLastnameIsUpdateToLowercaseBeforeBeenSavedInTheDatabase() {
+        
         when(userAccounts.save(any(UserAccount.class))).thenReturn(saved);
         ArgumentCaptor<UserAccount> captor = ArgumentCaptor.forClass(UserAccount.class);
         authService.registerUser(request);
@@ -338,8 +328,7 @@ class AuthServiceImplTest {
     }
 
     @Test
-    void thatFirstnameIsUpdateToLowercaseBeforeBeenSavedInTheDatabase(){
-        when(cloudService.uploadProfilePicture(any())).thenReturn(new CloudServiceResponse("www.cloudianry.com"));
+    void thatFirstnameIsUpdateToLowercaseBeforeBeenSavedInTheDatabase() {
         when(userAccounts.save(any(UserAccount.class))).thenReturn(saved);
         ArgumentCaptor<UserAccount> captor = ArgumentCaptor.forClass(UserAccount.class);
         authService.registerUser(request);
@@ -349,8 +338,8 @@ class AuthServiceImplTest {
     }
 
     @Test
-    void thatUsernameIsUpdateToLowercaseBeforeBeenSavedInTheDatabase(){
-        when(cloudService.uploadProfilePicture(any())).thenReturn(new CloudServiceResponse("www.cloudianry.com"));
+    void thatUsernameIsUpdateToLowercaseBeforeBeenSavedInTheDatabase() {
+        
         when(userAccounts.save(any(UserAccount.class))).thenReturn(saved);
         request.setUsername("JOHN");
         ArgumentCaptor<UserAccount> captor = ArgumentCaptor.forClass(UserAccount.class);
@@ -361,8 +350,8 @@ class AuthServiceImplTest {
     }
 
     @Test
-    void thatEmailIsUpdateToLowercaseBeforeBeenSavedInTheDatabase(){
-        when(cloudService.uploadProfilePicture(any())).thenReturn(new CloudServiceResponse("www.cloudianry.com"));
+    void thatEmailIsUpdateToLowercaseBeforeBeenSavedInTheDatabase() {
+        
         when(userAccounts.save(any(UserAccount.class))).thenReturn(saved);
         request.setEmail("BOLAJIdurodola@gmail.com");
         ArgumentCaptor<UserAccount> captor = ArgumentCaptor.forClass(UserAccount.class);
@@ -373,8 +362,8 @@ class AuthServiceImplTest {
     }
 
     @Test
-    void thatPasswordIsHashed(){
-        when(cloudService.uploadProfilePicture(any())).thenReturn(new CloudServiceResponse("www.cloudianry.com"));
+    void thatPasswordIsHashed() {
+        
         when(passwordEncoder.encode(any(String.class))).thenReturn("hashed_value_123");
         when(userAccounts.save(any(UserAccount.class))).thenReturn(saved);
         authService.registerUser(request);
@@ -384,7 +373,6 @@ class AuthServiceImplTest {
         assertThat(user.getPassword()).isNotNull();
         assertThat(user.getPassword().length()).isNotEqualTo(10);
     }
-
 
 
 }

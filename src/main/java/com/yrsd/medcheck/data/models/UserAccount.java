@@ -44,7 +44,7 @@ public class UserAccount {
     @Column(nullable = false)
     private String phone;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String nationalIdentityNumber;
 
     @Enumerated(EnumType.STRING)
@@ -66,6 +66,7 @@ public class UserAccount {
     private AccountStatus accountStatus;
 
     @CreatedDate
+    @Column(nullable = false, updatable = false)
     private Instant createdDate;
 
     @LastModifiedDate

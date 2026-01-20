@@ -24,28 +24,21 @@ public class SecurityFilterChainConfiguration {
                 .csrf(AbstractHttpConfigurer::disable)
                 .addFilterAt(customAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterAfter(customAuthorizationFilter, CustomAuthenticationFilter.class)
-                .authorizeHttpRequests((c) ->
-                        c.requestMatchers(HttpMethod.POST, "/api/v1/auth/signup").permitAll())
-                .authorizeHttpRequests(c->
-                        c.requestMatchers(HttpMethod.POST, "/api/v1/auth/signin").permitAll())
-                .authorizeHttpRequests(c->
-                        c.requestMatchers("/api/v1/consumer/**").hasAllAuthorities("CONSUMER", "ACTIVE"))
-                .authorizeHttpRequests(c->
-                        c.requestMatchers("/api/v1/retailer/**").hasAuthority("RETAILER"))
-                .authorizeHttpRequests(c->
-                        c.requestMatchers("/api/v1/wholesaler/**").hasAuthority("WHOLESALER"))
-                .authorizeHttpRequests(c->
-                        c.requestMatchers("/api/v1/manufacturer/**").hasAuthority("MANUFACTURER"))
-                .authorizeHttpRequests(c->
-                        c.requestMatchers("/api/v1/investigator/**").hasAuthority("INVESTIGATOR"))
-                .authorizeHttpRequests(c->
-                        c.requestMatchers(HttpMethod.POST, "/api/v1/verification/batch")
-                                .hasAnyAuthority("INVESTIGATOR", "MANUFACTURER", "RETAILER", "WHOLESALER"))
-                .authorizeHttpRequests(c->
-                        c.requestMatchers(HttpMethod.GET, "/test/live").permitAll())
-                .authorizeHttpRequests(c->
-                        c.requestMatchers(HttpMethod.GET, "/test/live/consumer").hasAuthority("CONSUMER"))
-                .authorizeHttpRequests(c->c.anyRequest().authenticated())
+                .authorizeHttpRequests((c) -> c
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/signup").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/signin").permitAll()
+                        .requestMatchers("/api/v1/consumer/**").hasAllAuthorities("CONSUMER", "ACTIVE")
+                        .requestMatchers("/api/v1/retailer/**").hasAuthority("RETAILER")
+                        .requestMatchers("/api/v1/wholesaler/**").hasAuthority("WHOLESALER")
+                        .requestMatchers("/api/v1/manufacturer/**").hasAuthority("MANUFACTURER")
+                        .requestMatchers("/api/v1/investigator/**").hasAuthority("INVESTIGATOR")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/verification/batch")
+                                .hasAnyAuthority("INVESTIGATOR", "MANUFACTURER", "RETAILER", "WHOLESALER")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/verification/pack").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/verification/tablet").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/test/live").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/test/live/consumer").hasAuthority("CONSUMER")
+                        .anyRequest().authenticated())
                 .build();
 
     }
