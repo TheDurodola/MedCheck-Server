@@ -19,11 +19,6 @@ public class Batch {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    @Column(nullable = false)
-    private String name;
-
-    private String description;
-
     @Column(unique = true, nullable = false)
     private String verificationCode;
 
@@ -34,6 +29,10 @@ public class Batch {
     @CreatedDate
     @Column(nullable = false, updatable = false)
     private Instant created;
+
+    @ManyToOne
+    @JoinColumn(name = "drug_id")
+    private Drug drug;
 
     @CreatedBy
     @Column(updatable = false)
