@@ -11,10 +11,8 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Primary;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
@@ -39,6 +37,9 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
     private final ObjectMapper objectMapper;
     private final String signingKey;
 
+    @Value("${jwt.duration}")
+    private long jwtValidationLength;
+
     public CustomAuthenticationFilter( AuthenticationManager authenticationManager, ObjectMapper objectMapper, @Value("${jwt.signing.key}")  String signingKey) {
         this.authenticationManager = authenticationManager;
         this.objectMapper = objectMapper;
@@ -54,7 +55,7 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
             filterChain.doFilter(request,response);
             return;
         }
-        log.info("Authentication required");
+        log.info("Authentication Initiated");
         try {
             InputStream inputStream = request.getInputStream();
             SignInRequest signInRequest = objectMapper.readValue(inputStream, SignInRequest.class);
@@ -65,32 +66,38 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
                     .withIssuer("medcheck")
                     .withSubject(Objects.requireNonNull(result.getPrincipal()).toString())
                     .withIssuedAt(Date.from(Instant.now()))
-                    .withExpiresAt(Date.from(Instant.now().plusSeconds(86400)))
+                    .withExpiresAt(Date.from(Instant.now().plusSeconds(jwtValidationLength)))
                     .sign(Algorithm.HMAC256(signingKey.getBytes()));
 
-            SignInResponse signInResponse = new SignInResponse(jwt);
 
+            SignInResponse signInResponse = new SignInResponse(jwt);
             response.setContentType("application/json");
             response.setStatus(HttpServletResponse.SC_OK);
             response.getOutputStream()
                     .write(objectMapper.writeValueAsBytes(signInResponse));
+            log.info("JWT token created for user: {}", result.getPrincipal().toString());
             response.flushBuffer();
-        } catch (IOException  | IllegalArgumentException | JWTCreationException e) {
+        } catch (IOException e) {
+            log.error("IOException while sending JWT token to user: {}", e.getMessage());
             Map<String, String> error = new HashMap<>();
-            error.put("message", "Internal Server Error");
+            error.put("error", e.getMessage());
+            error.put("message", "Something went wrong...");
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.setContentType("application/json");
             response.getOutputStream().write(objectMapper.writeValueAsBytes(error));
             response.flushBuffer();
-        } catch (AuthenticationException e) {
+        } catch (AuthenticationException | JWTCreationException | IllegalArgumentException e) {
+            log.info("JWTException while sending JWT token to user: {}", e.getMessage());
             Map<String, String> error = new HashMap<>();
-            error.put("message", e.getMessage());
+            error.put("error", e.getMessage());
+            error.put("message", "Invalid Username or Password");
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json");
             response.getOutputStream().write(objectMapper.writeValueAsBytes(error));
             response.flushBuffer();
         }
-//        filterChain.doFilter(request, response);
-
     }
 }
+
+
+

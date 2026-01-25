@@ -1,4 +1,4 @@
-package com.yrsd.medcheck.services;
+package com.yrsd.medcheck.services.interfaces;
 
 import com.yrsd.medcheck.security.dtos.responses.UserAccountResponse;
 

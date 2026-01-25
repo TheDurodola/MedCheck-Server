@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @Slf4j
+
 public class Validator {
 
     private static final Tika tika = new Tika();

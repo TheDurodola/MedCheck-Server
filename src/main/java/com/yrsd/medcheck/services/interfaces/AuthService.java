@@ -1,4 +1,4 @@
-package com.yrsd.medcheck.services;
+package com.yrsd.medcheck.services.interfaces;
 
 import com.yrsd.medcheck.dtos.requests.RegisterUserRequest;
 import com.yrsd.medcheck.dtos.responses.RegisterUserResponse;

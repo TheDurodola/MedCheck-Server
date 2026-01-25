@@ -1,7 +1,7 @@
 package com.yrsd.medcheck.controllers;
 
 import com.yrsd.medcheck.dtos.requests.RegisterUserRequest;
-import com.yrsd.medcheck.services.AuthService;
+import com.yrsd.medcheck.services.interfaces.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

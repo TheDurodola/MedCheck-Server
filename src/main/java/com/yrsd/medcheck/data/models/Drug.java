@@ -16,11 +16,26 @@ import java.time.Instant;
 public class Drug {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    private String name;
+    @Column(nullable = false, unique = true)
+    private String brandName;
+
+    @Column(nullable = false)
+    private String genericName;
+
+
+    @Column(nullable = false, unique = true)
+    private  String nafdacRegistrationNumber;
+
+    @Column(nullable = false)
+    private Integer expiryDurationInDays;
 
     private String description;
+
+    @Column(nullable = false, updatable = false)
+    private String DrugCode;
 
     @ManyToOne
     @JoinColumn(name = "manufacturer_id")
@@ -29,9 +44,6 @@ public class Drug {
     @CreatedDate
     @Column(nullable = false, updatable = false)
     private Instant createdDate;
-
-    @Column(nullable = false, updatable = false)
-    private Instant expirationDate;
 
     @LastModifiedDate
     private Instant lastModifiedDate;

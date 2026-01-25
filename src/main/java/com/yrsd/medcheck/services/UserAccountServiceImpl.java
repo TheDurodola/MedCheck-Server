@@ -3,6 +3,7 @@ package com.yrsd.medcheck.services;
 import com.yrsd.medcheck.data.repositories.UserAccounts;
 import com.yrsd.medcheck.exceptions.AccountNotFoundException;
 import com.yrsd.medcheck.security.dtos.responses.UserAccountResponse;
+import com.yrsd.medcheck.services.interfaces.UserAccountService;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;

@@ -1,10 +1,8 @@
 package com.yrsd.medcheck.security.configs;
 
-import com.yrsd.medcheck.data.models.UserAccount;
 import com.yrsd.medcheck.exceptions.AccountNotFoundException;
 import com.yrsd.medcheck.security.dtos.responses.UserAccountResponse;
-import com.yrsd.medcheck.services.AuthService;
-import com.yrsd.medcheck.services.UserAccountService;
+import com.yrsd.medcheck.services.interfaces.UserAccountService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;

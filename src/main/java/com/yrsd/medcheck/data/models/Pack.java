@@ -4,9 +4,12 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.math.BigInteger;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -18,18 +21,39 @@ public class Pack {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
+    @CreatedDate
+    @Column(nullable = false, updatable = false)
+    private Instant created;
+
+    @LastModifiedDate
+    @Column(nullable = false, updatable = false)
+    private Instant lastModified;
+
+
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "pack")
+    private List<Sachet> sachets;
+
+    @Column(nullable = false)
+    private BigInteger verificationCount;
+
     @Column(unique = true, nullable = false)
     private String verificationCode;
 
-    @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name = "pack_id")
-    private List<Tablet> tablets;
+    @ManyToOne
+    @JoinColumn(name = "batch_id")
+    private Batch batch;
 
     @ManyToOne
     @JoinColumn(name = "drug_id")
     private Drug drug;
 
-    @CreatedDate
-    @Column(nullable = false, updatable = false)
-    private Instant created;
+
+    public void addSachet(Sachet sachet) {
+        if (sachets == null) {
+            sachets = new ArrayList<>();
+        }
+        this.sachets.add(sachet);
+        sachet.setPack(this);
+    }
 }

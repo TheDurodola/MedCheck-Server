@@ -1,20 +1,15 @@
 package com.yrsd.medcheck.services;
 
-import com.cloudinary.provisioning.Account;
 import com.yrsd.medcheck.data.models.UserAccount;
-import com.yrsd.medcheck.data.models.enums.AccountStatus;
-import com.yrsd.medcheck.data.models.enums.Role;
 import com.yrsd.medcheck.data.repositories.UserAccounts;
 import com.yrsd.medcheck.dtos.requests.RegisterUserRequest;
-import com.yrsd.medcheck.dtos.requests.UploadProfilePictureRequest;
-import com.yrsd.medcheck.dtos.responses.CloudServiceResponse;
 import com.yrsd.medcheck.dtos.responses.RegisterUserResponse;
-import com.yrsd.medcheck.dtos.responses.UploadProfilePictureResponse;
 import com.yrsd.medcheck.exceptions.EmailAlreadyExistException;
 import com.yrsd.medcheck.exceptions.UsernameAlreadyExistException;
-import com.yrsd.medcheck.proxy.cloud.CloudService;
+import com.yrsd.medcheck.services.interfaces.AuthService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NonNull;
 import org.modelmapper.ModelMapper;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -58,7 +53,7 @@ public class AuthServiceImpl implements AuthService {
 //        return null;
 //    }
 
-    private void validateUniqueness(RegisterUserRequest request) {
+    private void validateUniqueness(@NonNull RegisterUserRequest request) {
         if (userAccounts.existsByUsername(request.getUsername())) {
             throw new UsernameAlreadyExistException(request.getUsername() + " already exists");
         }

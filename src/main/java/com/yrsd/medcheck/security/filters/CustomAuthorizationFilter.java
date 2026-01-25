@@ -9,7 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yrsd.medcheck.data.models.enums.AccountStatus;
 import com.yrsd.medcheck.data.models.enums.Role;
 import com.yrsd.medcheck.security.dtos.responses.UserAccountResponse;
-import com.yrsd.medcheck.services.UserAccountService;
+import com.yrsd.medcheck.services.interfaces.UserAccountService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -25,14 +25,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.time.Duration;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.cloudinary.AccessControlRule.AccessType.token;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
 @Slf4j

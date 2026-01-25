@@ -4,7 +4,6 @@ import com.yrsd.medcheck.config.MapperConfig;
 import com.yrsd.medcheck.data.models.UserAccount;
 import com.yrsd.medcheck.data.repositories.UserAccounts;
 import com.yrsd.medcheck.dtos.requests.RegisterUserRequest;
-import com.yrsd.medcheck.dtos.responses.CloudServiceResponse;
 import com.yrsd.medcheck.dtos.responses.RegisterUserResponse;
 import com.yrsd.medcheck.exceptions.*;
 import com.yrsd.medcheck.proxy.cloud.CloudService;
@@ -14,7 +13,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDate;
@@ -56,15 +54,13 @@ class AuthServiceImplTest {
         modelMapper = new ModelMapper();
 
         MapperConfig.configureMatchingStrategy(modelMapper);
-        MapperConfig.configureForUserAccountToRegisterUserResponse(modelMapper);
-        MapperConfig.configureForRegisterUserRequestToUserAccount(modelMapper);
 
         request = new RegisterUserRequest();
         request.setDateOfBirth(LocalDate.of(2000, 1, 1));
         request.setGender("MALE");
         request.setNationalIdentityNumber("123456789012");
         request.setRole("CONSUMER");
-        request.setPhone("123456789");
+        request.setPhoneNumber("123456789");
         request.setEmail("johndoe@gmail.com");
         request.setUsername("johndoe");
         request.setPassword("Password123");
