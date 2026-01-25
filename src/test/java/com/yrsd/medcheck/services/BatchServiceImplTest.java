@@ -131,7 +131,7 @@ class BatchServiceImplTest {
         Drug drug = new Drug();
         drug.setBrandName("Paracetamol");
         drug.setGenericName("Acetaminophen");
-        drug.setExpiryDurationInDays(Duration.ofDays(365));
+        drug.setExpiryDurationInDays(365);
         drug.setDescription("common over-the-counter medicine for reducing fever and relieving mild to moderate pain " +
                 "from headaches, muscle aches, toothaches, and colds, acting as an analgesic (pain reliever) and " +
                 "antipyretic (fever reducer). Sold under names like Tylenol, it's available in many forms, but taking " +
