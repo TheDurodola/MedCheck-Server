@@ -48,6 +48,7 @@ public class Pack {
     @JoinColumn(name = "drug_id")
     private Drug drug;
 
+    private boolean isConsumed;
 
     public void addSachet(Sachet sachet) {
         if (sachets == null) {

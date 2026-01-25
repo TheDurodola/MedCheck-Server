@@ -4,8 +4,88 @@ import com.yrsd.medcheck.data.models.UserAccount;
 import com.yrsd.medcheck.data.models.enums.AccountStatus;
 import com.yrsd.medcheck.data.models.enums.Role;
 import com.yrsd.medcheck.dtos.requests.RegisterUserRequest;
+import com.yrsd.medcheck.exceptions.InvalidPhoneNumberException;
 
 public class Mutator {
+
+    public static String toSentenceCase(String input) {
+        if (input == null || input.isEmpty()) {
+            return input;
+        }
+
+        StringBuilder result = new StringBuilder();
+        boolean capitalizeNext = true;
+
+        for (char c : input.toCharArray()) {
+            if (Character.isLetter(c)) {
+                if (capitalizeNext) {
+                    result.append(Character.toUpperCase(c));
+                    capitalizeNext = false;
+                } else {
+                    result.append(Character.toLowerCase(c));
+                }
+            } else {
+                result.append(c);
+
+                if (c == '.' || c == '!' || c == '?') {
+                    capitalizeNext = true;
+                }
+            }
+        }
+
+        return result.toString();
+    }
+
+    public static String standardizePhoneNumber(String phone) {
+        if (phone == null) return null;
+
+
+        String digits = phone.replaceAll("\\D", "");
+
+
+        if (digits.startsWith("0")) {
+
+            digits = "234" + digits.substring(1);
+        } else if (digits.startsWith("234")) {
+
+        } else {
+
+            if (digits.length() == 10) {
+                digits = "234" + digits;
+            }
+        }
+
+
+        if (digits.length() != 13) {
+            throw new InvalidPhoneNumberException("Invalid number length after standardization: " + digits);
+        }
+
+        return digits;
+    }
+
+    public static String toTitleCase(String input) {
+        if (input == null || input.isEmpty()) {
+            return input;
+        }
+
+        StringBuilder titleCase = new StringBuilder();
+        boolean nextTitleCase = true;
+
+        for (char c : input.toCharArray()) {
+            if (Character.isSpaceChar(c)) {
+                nextTitleCase = true;
+            } else if (nextTitleCase) {
+                c = Character.toTitleCase(c);
+                nextTitleCase = false;
+            } else {
+                c = Character.toLowerCase(c);
+            }
+            titleCase.append(c);
+        }
+
+        return titleCase.toString();
+    }
+
     public static void mutate(RegisterUserRequest request) {
         request.setUsername(request.getUsername().toLowerCase());
         request.setFirstName(request.getFirstName().toLowerCase());

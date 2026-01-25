@@ -3,6 +3,7 @@ package com.yrsd.medcheck.utils;
 import com.yrsd.medcheck.dtos.responses.ExceptionResponse;
 import com.yrsd.medcheck.exceptions.*;
 import com.yrsd.medcheck.security.exceptions.AuthenticationNotSupportedException;
+import org.jspecify.annotations.NonNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -15,7 +16,7 @@ import java.time.LocalDateTime;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(value = AccountNotFoundException.class)
-    public ResponseEntity<ExceptionResponse> handleException(AccountNotFoundException e) {
+    public ResponseEntity<ExceptionResponse> handleException(@NonNull AccountNotFoundException e) {
         ExceptionResponse exception = new ExceptionResponse(HttpStatus.NOT_FOUND.value(),
                 e.getMessage(),
                 LocalDateTime.now()
@@ -25,7 +26,7 @@ public class GlobalExceptionHandler {
 
 
     @ExceptionHandler(value = EmailAlreadyExistException.class)
-    public ResponseEntity<ExceptionResponse> handleException(EmailAlreadyExistException e) {
+    public ResponseEntity<ExceptionResponse> handleException(@NonNull EmailAlreadyExistException e) {
         ExceptionResponse exception = new ExceptionResponse(HttpStatus.BAD_REQUEST.value(),
                 e.getMessage(),
                 LocalDateTime.now()
@@ -35,7 +36,7 @@ public class GlobalExceptionHandler {
 
 
     @ExceptionHandler(value = FailedFileUploadException.class)
-    public ResponseEntity<ExceptionResponse> handleException(FailedFileUploadException e) {
+    public ResponseEntity<ExceptionResponse> handleException(@NonNull FailedFileUploadException e) {
         ExceptionResponse exception = new ExceptionResponse(HttpStatus.BAD_REQUEST.value(),
                 e.getMessage(),
                 LocalDateTime.now()
@@ -45,7 +46,7 @@ public class GlobalExceptionHandler {
 
 
     @ExceptionHandler(value = InvalidDateOfBirthException.class)
-    public ResponseEntity<ExceptionResponse> handleException(InvalidDateOfBirthException e) {
+    public ResponseEntity<ExceptionResponse> handleException(@NonNull InvalidDateOfBirthException e) {
         ExceptionResponse exception = new ExceptionResponse(HttpStatus.BAD_REQUEST.value(),
                 e.getMessage(),
                 LocalDateTime.now()
@@ -55,7 +56,7 @@ public class GlobalExceptionHandler {
 
 
     @ExceptionHandler(value = InvalidEmailException.class)
-    public ResponseEntity<ExceptionResponse> handleException(InvalidEmailException e) {
+    public ResponseEntity<ExceptionResponse> handleException(@NonNull InvalidEmailException e) {
         ExceptionResponse exception = new ExceptionResponse(HttpStatus.BAD_REQUEST.value(),
                 e.getMessage(),
                 LocalDateTime.now()
@@ -65,7 +66,7 @@ public class GlobalExceptionHandler {
 
 
     @ExceptionHandler(value = InvalidGenderException.class)
-    public ResponseEntity<ExceptionResponse> handleException(InvalidGenderException e) {
+    public ResponseEntity<ExceptionResponse> handleException(@NonNull InvalidGenderException e) {
         ExceptionResponse exception = new ExceptionResponse(HttpStatus.BAD_REQUEST.value(),
                 e.getMessage(),
                 LocalDateTime.now()
@@ -75,7 +76,7 @@ public class GlobalExceptionHandler {
 
 
     @ExceptionHandler(value = InvalidNameException.class)
-    public ResponseEntity<ExceptionResponse> handleException(InvalidNameException e) {
+    public ResponseEntity<ExceptionResponse> handleException(@NonNull InvalidNameException e) {
         ExceptionResponse exception = new ExceptionResponse(HttpStatus.BAD_REQUEST.value(),
                 e.getMessage(),
                 LocalDateTime.now()
@@ -83,7 +84,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception);
     }
     @ExceptionHandler(value = InvalidNationalIdentityNumberException.class)
-    public ResponseEntity<ExceptionResponse> handleException(InvalidNationalIdentityNumberException e) {
+    public ResponseEntity<ExceptionResponse> handleException(@NonNull InvalidNationalIdentityNumberException e) {
         ExceptionResponse exception = new ExceptionResponse(HttpStatus.BAD_REQUEST.value(),
                 e.getMessage(),
                 LocalDateTime.now()
@@ -91,7 +92,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception);
     }
     @ExceptionHandler(value = InvalidPasswordException.class)
-    public ResponseEntity<ExceptionResponse> handleException(InvalidPasswordException e) {
+    public ResponseEntity<ExceptionResponse> handleException(@NonNull InvalidPasswordException e) {
         ExceptionResponse exception = new ExceptionResponse(HttpStatus.BAD_REQUEST.value(),
                 e.getMessage(),
                 LocalDateTime.now()
@@ -99,7 +100,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception);
     }
     @ExceptionHandler(value = InvalidProfilePictureException.class)
-    public ResponseEntity<ExceptionResponse> handleException(InvalidProfilePictureException e) {
+    public ResponseEntity<ExceptionResponse> handleException(@NonNull InvalidProfilePictureException e) {
         ExceptionResponse exception = new ExceptionResponse(HttpStatus.BAD_REQUEST.value(),
                 e.getMessage(),
                 LocalDateTime.now()
@@ -107,7 +108,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception);
     }
     @ExceptionHandler(value = InvalidUsernameException.class)
-    public ResponseEntity<ExceptionResponse> handleException(InvalidUsernameException e) {
+    public ResponseEntity<ExceptionResponse> handleException(@NonNull InvalidUsernameException e) {
         ExceptionResponse exception = new ExceptionResponse(HttpStatus.BAD_REQUEST.value(),
                 e.getMessage(),
                 LocalDateTime.now()
@@ -116,7 +117,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(value = UsernameAlreadyExistException.class)
-    public ResponseEntity<ExceptionResponse> handleException(UsernameAlreadyExistException e) {
+    public ResponseEntity<ExceptionResponse> handleException(@NonNull UsernameAlreadyExistException e) {
         ExceptionResponse exception = new ExceptionResponse(HttpStatus.BAD_REQUEST.value(),
                 e.getMessage(),
                 LocalDateTime.now()
@@ -125,13 +126,69 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(value = AuthenticationNotSupportedException.class)
-    public ResponseEntity<ExceptionResponse> handleException(AuthenticationNotSupportedException e) {
+    public ResponseEntity<ExceptionResponse> handleException(@NonNull AuthenticationNotSupportedException e) {
         ExceptionResponse exception = new ExceptionResponse(HttpStatus.UNAUTHORIZED.value(),
                 e.getMessage(),
                 LocalDateTime.now()
         );
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(exception);
     }
+
+    @ExceptionHandler(value = InvalidPhoneNumberException.class)
+    public ResponseEntity<ExceptionResponse> handleException(@NonNull InvalidPhoneNumberException e) {
+        ExceptionResponse exception = new ExceptionResponse(HttpStatus.BAD_REQUEST.value(),
+                e.getMessage(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception);
+    }
+
+    @ExceptionHandler(value = PackDoesntExistException.class)
+    public ResponseEntity<ExceptionResponse> handleException(@NonNull PackDoesntExistException e) {
+        ExceptionResponse exception = new ExceptionResponse(HttpStatus.BAD_REQUEST.value(),
+                e.getMessage(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception);
+    }
+
+    @ExceptionHandler(value = SachetDoesntExistException.class)
+    public ResponseEntity<ExceptionResponse> handleException(@NonNull SachetDoesntExistException e) {
+        ExceptionResponse exception = new ExceptionResponse(HttpStatus.BAD_REQUEST.value(),
+                e.getMessage(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception);
+    }
+
+    @ExceptionHandler(value = UnauthorizedException.class)
+    public ResponseEntity<ExceptionResponse> handleException(@NonNull UnauthorizedException e) {
+        ExceptionResponse exception = new ExceptionResponse(HttpStatus.BAD_REQUEST.value(),
+                e.getMessage(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception);
+    }
+
+
+    @ExceptionHandler(value = DrugDoesntExistException.class)
+    public ResponseEntity<ExceptionResponse> handleException(@NonNull DrugDoesntExistException e) {
+        ExceptionResponse exception = new ExceptionResponse(HttpStatus.BAD_REQUEST.value(),
+                e.getMessage(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception);
+    }
+
+    @ExceptionHandler(value = DrugDoesntExistException.class)
+    public ResponseEntity<ExceptionResponse> handleException(@NonNull BatchDoesntExistException e) {
+        ExceptionResponse exception = new ExceptionResponse(HttpStatus.BAD_REQUEST.value(),
+                e.getMessage(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception);
+    }
+
 
 
 

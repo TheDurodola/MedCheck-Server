@@ -1,5 +1,8 @@
 package com.yrsd.medcheck.utils;
 
+import com.google.i18n.phonenumbers.NumberParseException;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.Phonenumber;
 import com.yrsd.medcheck.data.models.enums.Gender;
 import com.yrsd.medcheck.dtos.requests.RegisterUserRequest;
 import com.yrsd.medcheck.exceptions.*;
@@ -21,6 +24,17 @@ public class Validator {
             "image/jpeg",
             "image/png"
     );
+
+
+    public static boolean isValid(String rawNumber) {
+        PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
+        try {
+            Phonenumber.PhoneNumber number = phoneUtil.parse(rawNumber, "NG");
+            return phoneUtil.isValidNumber(number);
+        } catch (NumberParseException e) {
+            return false;
+        }
+    }
 
 
     public static void validate(RegisterUserRequest request) {

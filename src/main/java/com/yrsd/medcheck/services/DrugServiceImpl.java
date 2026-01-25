@@ -15,6 +15,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import static com.yrsd.medcheck.utils.CodeGenerator.generateDrugCode;
+import static com.yrsd.medcheck.utils.Mutator.toSentenceCase;
+import static com.yrsd.medcheck.utils.Mutator.toTitleCase;
+
 
 @Slf4j
 @Service
@@ -35,7 +38,10 @@ public class DrugServiceImpl implements DrugService {
 
         Drug drug = modelMapper.map(request, Drug.class);
         drug.setManufacturer(manufacturer);
+        drug.setBrandName(toTitleCase(drug.getBrandName()));
+        drug.setGenericName(toTitleCase(drug.getGenericName()));
         drug.setDrugCode(generateDrugCode(drug.getBrandName()));
+        drug.setDescription(toSentenceCase(drug.getDescription()));
         drug.setExpiryDurationInDays(request.getExpirationDurationInDays());
         Drug savedDrug = drugs.save(drug);
         return modelMapper.map(savedDrug, CreateDrugResponse.class);
