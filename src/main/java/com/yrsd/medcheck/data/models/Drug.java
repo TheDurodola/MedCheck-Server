@@ -34,8 +34,8 @@ public class Drug {
 
     private String description;
 
-    @Column(nullable = false, updatable = false)
-    private String DrugCode;
+    @Column(nullable = false, updatable = false, unique = true)
+    private String drugCode;
 
     @ManyToOne
     @JoinColumn(name = "manufacturer_id")

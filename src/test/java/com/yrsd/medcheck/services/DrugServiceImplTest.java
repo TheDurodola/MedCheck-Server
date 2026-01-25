@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -63,7 +64,7 @@ class DrugServiceImplTest {
         request = new CreateDrugRequest();
         request.setBrandName("Paracetamol");
         request.setGenericName("Acetaminophen");
-        request.setShelfLife(Duration.ofDays(365));
+        request.setExpirationDurationInDays(365);
         request.setDescription("common over-the-counter medicine for reducing fever and relieving mild to moderate pain " +
                 "from headaches, muscle aches, toothaches, and colds, acting as an analgesic (pain reliever) and " +
                 "antipyretic (fever reducer). Sold under names like Tylenol, it's available in many forms, but taking " +
@@ -74,6 +75,12 @@ class DrugServiceImplTest {
 
     @Test
     public  void createDrug() {
+        Drug drug = new Drug();
+        drug.setDrugCode("PPP");
+        drug.setId("blah");
+        drug.setCreatedDate(Instant.now());
+
+        when(drugs.save(any(Drug.class))).thenReturn(drug);
         when(userAccounts.findByUsername("lord_boj")).thenReturn(Optional.of(userAccount));
         String currentUser = "lord_boj";
         drugService.createDrug(request, currentUser);
@@ -82,6 +89,12 @@ class DrugServiceImplTest {
     @Test
     void thatDrugHasTheRightDetails(){
         when(userAccounts.findByUsername("lord_boj")).thenReturn(Optional.of(userAccount));
+        Drug drug = new Drug();
+        drug.setDrugCode("PPP");
+        drug.setId("blah");
+        drug.setCreatedDate(Instant.now());
+
+        when(drugs.save(any(Drug.class))).thenReturn(drug);
         String currentUser = "lord_boj";
         drugService.createDrug(request, currentUser);
         ArgumentCaptor<Drug> captor = ArgumentCaptor.forClass(Drug.class);
@@ -98,6 +111,12 @@ class DrugServiceImplTest {
 
     @Test
     void  thatDrugCodeIsGeneratedFromThreeLettersOfTheBrandName(){
+        Drug drug = new Drug();
+        drug.setDrugCode("PPP");
+        drug.setId("blah");
+        drug.setCreatedDate(Instant.now());
+
+        when(drugs.save(any(Drug.class))).thenReturn(drug);
         when(userAccounts.findByUsername("lord_boj")).thenReturn(Optional.of(userAccount));
         String currentUser = "lord_boj";
         drugService.createDrug(request, currentUser);

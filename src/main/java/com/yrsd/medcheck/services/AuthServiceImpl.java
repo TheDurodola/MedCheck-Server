@@ -40,6 +40,8 @@ public class AuthServiceImpl implements AuthService {
         userAccount.setPassword(passwordEncoder.encode(request.getPassword()));
         mutate(userAccount);
 
+
+
         UserAccount savedUserAccount = userAccounts.save(userAccount);
         log.info("user {} added to database", request.getUsername());
         return modelMapper.map(savedUserAccount, RegisterUserResponse.class);

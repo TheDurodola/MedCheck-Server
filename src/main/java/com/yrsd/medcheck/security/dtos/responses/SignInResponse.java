@@ -7,7 +7,9 @@ import lombok.Setter;
 @Getter
 public class SignInResponse {
     private String jwt;
-    public SignInResponse(String jwt) {
+    private String authority;
+    public SignInResponse(String jwt, String authorities) {
         this.jwt = jwt;
+        this.authority = authorities;
     }
 }

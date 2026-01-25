@@ -12,11 +12,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import static com.yrsd.medcheck.utils.CodeGenerator.generateDrugCode;
 
 @Slf4j
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class DrugServiceImpl implements DrugService {
 
@@ -26,14 +28,17 @@ public class DrugServiceImpl implements DrugService {
 
     @Override
     public CreateDrugResponse createDrug(CreateDrugRequest request, String currentUser) {
-        CreateDrugResponse response = new CreateDrugResponse();
+
         UserAccount manufacturer = userAccounts.findByUsername(currentUser).orElseThrow(() -> new UsernameNotFoundException("User not found"));
-        log.info(manufacturer.getUsername());
+        log.info("{} is attempting to create a drug", manufacturer.getUsername());
+
+
         Drug drug = modelMapper.map(request, Drug.class);
         drug.setManufacturer(manufacturer);
         drug.setDrugCode(generateDrugCode(drug.getBrandName()));
-        drugs.save(drug);
-        return response;
+        drug.setExpiryDurationInDays(request.getExpirationDurationInDays());
+        Drug savedDrug = drugs.save(drug);
+        return modelMapper.map(savedDrug, CreateDrugResponse.class);
     }
 
 

@@ -1,7 +1,9 @@
 package com.yrsd.medcheck.dtos.requests;
 
 import jakarta.validation.constraints.FutureOrPresent;
+import jakarta.validation.constraints.NegativeOrZero;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -21,9 +23,8 @@ public class CreateDrugRequest {
 
     private String description;
 
-    @NotBlank(message = "Shelf Life is required")
-
-    private Duration shelfLife;
+    @Positive(message = "Expiration must be a positive value")
+    private Integer expirationDurationInDays;
 
 
 }

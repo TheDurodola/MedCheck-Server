@@ -1,6 +1,7 @@
 package com.yrsd.medcheck.dtos.requests;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
@@ -9,19 +10,18 @@ import lombok.Setter;
 @Getter
 public class CreateBatchRequest {
 
-    @NotBlank
-    @Size(min = 1)
+    @Positive
     private long amountOfBatches;
 
-    @NotBlank
-    @Size(min = 1)
+    @Positive
     private long amountOfPacks;
 
-    @NotBlank
-    @Size(min = 1)
+    @Positive
     private long amountOfSachets;
+
     @NotBlank
     private String drugId;
-    @NotBlank
+
+
     private String manufacturerId;
 }

@@ -42,7 +42,7 @@ public class UserAccount {
     private String email;
 
     @Column(nullable = false)
-    private String phone;
+    private String phoneNumber;
 
     @Column(nullable = false, unique = true)
     private String nationalIdentityNumber;
@@ -59,7 +59,7 @@ public class UserAccount {
     private String profilePictureUrl;
 
     @Column(nullable = false)
-    private LocalDate birthDate;
+    private LocalDate dateOfBirth;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
