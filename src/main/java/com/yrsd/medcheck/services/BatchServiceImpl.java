@@ -4,18 +4,9 @@ import com.yrsd.medcheck.data.models.Batch;
 import com.yrsd.medcheck.data.models.Drug;
 import com.yrsd.medcheck.data.models.Pack;
 import com.yrsd.medcheck.data.models.Sachet;
-import com.yrsd.medcheck.data.repositories.Batches;
-import com.yrsd.medcheck.data.repositories.Drugs;
-import com.yrsd.medcheck.data.repositories.Packs;
-import com.yrsd.medcheck.data.repositories.Sachets;
-import com.yrsd.medcheck.dtos.requests.CreateBatchRequest;
-import com.yrsd.medcheck.dtos.requests.VerifyBatchRequest;
-import com.yrsd.medcheck.dtos.requests.VerifyPackRequest;
-import com.yrsd.medcheck.dtos.requests.VerifySachetRequest;
-import com.yrsd.medcheck.dtos.responses.CreateBatchResponse;
-import com.yrsd.medcheck.dtos.responses.VerifyBatchResponse;
-import com.yrsd.medcheck.dtos.responses.VerifyPackResponse;
-import com.yrsd.medcheck.dtos.responses.VerifySachetResponse;
+import com.yrsd.medcheck.data.repositories.*;
+import com.yrsd.medcheck.dtos.requests.*;
+import com.yrsd.medcheck.dtos.responses.*;
 import com.yrsd.medcheck.exceptions.BatchDoesntExistException;
 import com.yrsd.medcheck.exceptions.DrugDoesntExistException;
 import com.yrsd.medcheck.exceptions.PackDoesntExistException;
@@ -44,6 +35,8 @@ public class BatchServiceImpl implements BatchService {
     private final Sachets sachets;
     private final Packs packs;
     private final Drugs drugs;
+    private final BatchLogisticsRepo batchLogisticsRepo;
+    private final PackLogisticsRepo packLogisticsRepo;
 
     @Override
     public CreateBatchResponse createBatch(@NonNull CreateBatchRequest request) {
@@ -72,6 +65,16 @@ public class BatchServiceImpl implements BatchService {
 
         createBatches(request, drug, response);
         return response;
+    }
+
+    @Override
+    public TransferBatchResponse transferBatch(TransferBatchRequest request) {
+        return null;
+    }
+
+    @Override
+    public TransferPackResponse transferPack(TransferSachetRequest request) {
+        return null;
     }
 
     private void createBatches(@NonNull CreateBatchRequest request, Drug drug, CreateBatchResponse response) {
@@ -243,4 +246,6 @@ public class BatchServiceImpl implements BatchService {
 
         return response;
     }
+
+
 }

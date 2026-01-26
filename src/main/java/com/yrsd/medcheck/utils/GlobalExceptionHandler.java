@@ -180,7 +180,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception);
     }
 
-    @ExceptionHandler(value = DrugDoesntExistException.class)
+    @ExceptionHandler(value = BatchDoesntExistException.class)
     public ResponseEntity<ExceptionResponse> handleException(@NonNull BatchDoesntExistException e) {
         ExceptionResponse exception = new ExceptionResponse(HttpStatus.BAD_REQUEST.value(),
                 e.getMessage(),
