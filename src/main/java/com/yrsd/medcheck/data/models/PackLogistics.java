@@ -30,7 +30,7 @@ public class PackLogistics {
 
     @ManyToOne
     @JoinColumn(name = "pack_id")
-    private Pack batch;
+    private Pack pack;
 
     @CreatedDate
     @Column(nullable = false, updatable = false)

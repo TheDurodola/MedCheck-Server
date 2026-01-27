@@ -60,7 +60,7 @@ class AuthServiceImplTest {
         request.setGender("MALE");
         request.setNationalIdentityNumber("123456789012");
         request.setRole("CONSUMER");
-        request.setPhoneNumber("123456789");
+        request.setPhoneNumber("08144190470");
         request.setEmail("johndoe@gmail.com");
         request.setUsername("johndoe");
         request.setPassword("Password123");

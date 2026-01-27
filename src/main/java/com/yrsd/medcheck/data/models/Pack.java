@@ -29,6 +29,8 @@ public class Pack {
     @Column(nullable = false, updatable = false)
     private Instant lastModified;
 
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean isSold = false;
 
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "pack")
@@ -48,7 +50,9 @@ public class Pack {
     @JoinColumn(name = "drug_id")
     private Drug drug;
 
-    private boolean isConsumed;
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean isConsumed = false;
+
 
     public void addSachet(Sachet sachet) {
         if (sachets == null) {

@@ -7,7 +7,7 @@ public interface BatchService {
     CreateBatchResponse createBatch(CreateBatchRequest request);
 
     TransferBatchResponse transferBatch(TransferBatchRequest request);
-    TransferPackResponse transferPack(TransferSachetRequest request);
+    TransferPackResponse transferPack(TransferPackRequest request);
 
 
     VerifyBatchResponse verifyBatch(VerifyBatchRequest request);

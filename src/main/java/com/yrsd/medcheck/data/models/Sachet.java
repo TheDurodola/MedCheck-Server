@@ -27,7 +27,9 @@ public class Sachet {
     @Column(nullable = false, updatable = false)
     private Instant lastModified;
 
-    private boolean isConsumed;
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean isConsumed = false;
+
 
     private BigInteger numberOfPills;
 

@@ -1,18 +1,14 @@
 package com.yrsd.medcheck.services;
 
 import com.yrsd.medcheck.data.models.*;
+import com.yrsd.medcheck.data.models.enums.Role;
 import com.yrsd.medcheck.data.repositories.*;
-import com.yrsd.medcheck.dtos.requests.CreateBatchRequest;
-import com.yrsd.medcheck.dtos.requests.VerifyBatchRequest;
-import com.yrsd.medcheck.dtos.requests.VerifyPackRequest;
-import com.yrsd.medcheck.dtos.requests.VerifySachetRequest;
-import com.yrsd.medcheck.dtos.responses.CreateBatchResponse;
-import com.yrsd.medcheck.dtos.responses.VerifyBatchResponse;
-import com.yrsd.medcheck.dtos.responses.VerifyPackResponse;
-import com.yrsd.medcheck.dtos.responses.VerifySachetResponse;
+import com.yrsd.medcheck.dtos.requests.*;
+import com.yrsd.medcheck.dtos.responses.*;
 import com.yrsd.medcheck.exceptions.*;
 import com.yrsd.medcheck.utils.CodeGenerator;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -50,6 +46,10 @@ class BatchServiceImplTest {
     Packs packs;
 
     @Mock
+    BatchLogisticsRepo batchLogisticsRepo;
+    @Mock
+    PackLogisticsRepo packLogisticsRepo;
+    @Mock
     Sachets sachets;
 
     @Mock
@@ -59,7 +59,12 @@ class BatchServiceImplTest {
     private BatchServiceImpl batchService;
 
 
-
+    private UserAccount testmanufacturer;
+    private UserAccount wholesaler;
+    private UserAccount retailer;
+    private Drug drug;
+    private Batch batch;
+    private Pack pack;
     private Drug testDrug;
     private UserAccount manufacturer;
     private Batch testBatch;
@@ -68,6 +73,37 @@ class BatchServiceImplTest {
 
     @BeforeEach
     void setUp() {
+        testmanufacturer = new UserAccount();
+        testmanufacturer.setId("user-1-uuid");
+        testmanufacturer.setUsername("Pfizer-NG");
+        testmanufacturer.setRole(Role.MANUFACTURER);
+
+        wholesaler = new UserAccount();
+        wholesaler.setId("user-2-uuid");
+        wholesaler.setUsername("Big-Pharma-Dist");
+        wholesaler.setRole(Role.WHOLESALER);
+
+        retailer = new UserAccount();
+        retailer.setId("user-3-uuid");
+        retailer.setUsername("Olatunde-Pharmacy");
+        retailer.setRole(Role.RETAILER);
+
+        drug = new Drug();
+        drug.setId("drug-100-uuid");
+        drug.setDrugCode("PAN");
+        drug.setManufacturer(manufacturer);
+        drug.setExpiryDurationInDays(365);
+
+        batch = new Batch();
+        batch.setId("batch-uuid");
+        batch.setVerificationCode("PAN-B-123");
+        batch.setDrug(drug);
+
+        pack = new Pack();
+        pack.setId("pack-uuid");
+        pack.setVerificationCode("PAN-P-456");
+        pack.setBatch(batch);
+        pack.setDrug(drug);
 
         manufacturer = new UserAccount();
         manufacturer.setId("manufacturer-123");
@@ -242,10 +278,163 @@ class BatchServiceImplTest {
     }
 
 
+    @Test
+    @DisplayName("Should create batch successfully when manufacturer matches")
+    void createBatch_Success() {
+        CreateBatchRequest request = new CreateBatchRequest();
+        request.setDrugId("drug-100-uuid");
+        request.setManufacturerId("Pfizer-NG");
+        request.setAmountOfBatches(1);
+        request.setAmountOfPacks(1);
+        request.setAmountOfSachets(1);
 
+        when(drugs.findById("drug-100-uuid")).thenReturn(Optional.of(drug));
+        when(batches.saveAll(any())).thenAnswer(i -> i.getArgument(0));
 
+        CreateBatchResponse response = batchService.createBatch(request);
 
+        assertNotNull(response);
+        assertEquals("Batch created", response.getMessage());
+        verify(batches, times(1)).saveAll(any());
+    }
 
+    @Test
+    @DisplayName("Should fail create batch if requester is not the drug manufacturer")
+    void createBatch_Unauthorized() {
+        CreateBatchRequest request = new CreateBatchRequest();
+        request.setDrugId("drug-100-uuid"); // String ID
+        request.setManufacturerId("Fake-Manufacturer");
 
+        when(drugs.findById("drug-100-uuid")).thenReturn(Optional.of(drug));
 
+        assertThrows(UnauthorizedException.class, () -> batchService.createBatch(request));
+    }
+
+    @Test
+    @DisplayName("Manufacturer should transfer to Wholesaler successfully (First Move)")
+    void transferBatch_ManufacturerToWholesaler_Success() {
+        // String IDs: BatchID, SenderID, ReceiverID
+        TransferBatchRequest request = new TransferBatchRequest("batch-uuid", "user-1-uuid", "user-2-uuid");
+
+        when(batches.findById("batch-uuid")).thenReturn(Optional.of(batch));
+        when(userAccounts.findById("user-1-uuid")).thenReturn(Optional.of(testmanufacturer));
+        when(userAccounts.findById("user-2-uuid")).thenReturn(Optional.of(wholesaler));
+
+        when(batchLogisticsRepo.existsByBatch(batch)).thenReturn(false);
+
+        batchService.transferBatch(request);
+
+        verify(batchLogisticsRepo, times(1)).save(any(BatchLogistics.class));
+    }
+
+    @Test
+    @DisplayName("Manufacturer should FAIL to transfer if batch already moved")
+    void transferBatch_Manufacturer_AlreadyMoved_Fail() {
+        TransferBatchRequest request = new TransferBatchRequest("batch-uuid", "user-1-uuid", "user-2-uuid");
+
+        when(batches.findById("batch-uuid")).thenReturn(Optional.of(batch));
+        when(userAccounts.findById("user-1-uuid")).thenReturn(Optional.of(testmanufacturer));
+        when(userAccounts.findById("user-2-uuid")).thenReturn(Optional.of(wholesaler));
+
+        when(batchLogisticsRepo.existsByBatch(batch)).thenReturn(true);
+
+        assertThrows(RestrictedTransferException.class, () -> batchService.transferBatch(request));
+    }
+
+    @Test
+    @DisplayName("Wholesaler to Retailer Success (with Custody)")
+    void transferBatch_WholesalerToRetailer_Success() {
+        // String IDs: Wholesaler (2) -> Retailer (3)
+        TransferBatchRequest request = new TransferBatchRequest("batch-uuid", "user-2-uuid", "user-3-uuid");
+
+        when(batches.findById("batch-uuid")).thenReturn(Optional.of(batch));
+        when(userAccounts.findById("user-2-uuid")).thenReturn(Optional.of(wholesaler));
+        when(userAccounts.findById("user-3-uuid")).thenReturn(Optional.of(retailer));
+
+        BatchLogistics lastMove = new BatchLogistics();
+        lastMove.setRecipient(wholesaler);
+        when(batchLogisticsRepo.findTopByBatchOrderByCreatedDesc(batch)).thenReturn(Optional.of(lastMove));
+
+        batchService.transferBatch(request);
+
+        verify(batchLogisticsRepo, times(1)).save(any(BatchLogistics.class));
+    }
+
+    @Test
+    @DisplayName("Wholesaler Transfer FAIL: Custody Mismatch (Double Spending)")
+    void transferBatch_Wholesaler_CustodyFail() {
+        TransferBatchRequest request = new TransferBatchRequest("batch-uuid", "user-2-uuid", "user-3-uuid");
+
+        when(batches.findById("batch-uuid")).thenReturn(Optional.of(batch));
+        when(userAccounts.findById("user-2-uuid")).thenReturn(Optional.of(wholesaler));
+        when(userAccounts.findById("user-3-uuid")).thenReturn(Optional.of(retailer));
+
+        BatchLogistics lastMove = new BatchLogistics();
+      
+        lastMove.setRecipient(retailer);
+
+        when(batchLogisticsRepo.findTopByBatchOrderByCreatedDesc(batch)).thenReturn(Optional.of(lastMove));
+
+        RestrictedTransferException ex = assertThrows(RestrictedTransferException.class,
+                () -> batchService.transferBatch(request));
+
+        assertTrue(ex.getMessage().contains("Custody Error"));
+    }
+
+    @Test
+    @DisplayName("Retailer sells pack successfully (Ownership via Batch Custody)")
+    void sellPack_Success_BatchOwnership() {
+        SellPackRequest request = new SellPackRequest();
+        request.setPackId("PAN-P-456");
+        request.setRetailerId("user-3-uuid"); // String ID
+
+        when(packs.findByVerificationCode("PAN-P-456")).thenReturn(Optional.of(pack));
+        when(userAccounts.findById("user-3-uuid")).thenReturn(Optional.of(retailer));
+
+        when(packLogisticsRepo.findTopByPackOrderByCreatedDesc(pack)).thenReturn(Optional.empty());
+
+        BatchLogistics batchMove = new BatchLogistics();
+        batchMove.setRecipient(retailer);
+        when(batchLogisticsRepo.findTopByBatchOrderByCreatedDesc(batch)).thenReturn(Optional.of(batchMove));
+
+        SellPackResponse response = batchService.sellPack(request);
+
+        assertTrue(pack.isSold());
+        assertEquals("Pack marked as SOLD to consumer.", response.getMessage());
+        verify(packs).save(pack);
+    }
+
+    @Test
+    @DisplayName("Sell Pack FAIL: Item already sold")
+    void sellPack_Fail_AlreadySold() {
+        SellPackRequest request = new SellPackRequest();
+        request.setPackId("PAN-P-456");
+        request.setRetailerId("user-3-uuid");
+
+        pack.setSold(true);
+
+        when(packs.findByVerificationCode("PAN-P-456")).thenReturn(Optional.of(pack));
+        when(userAccounts.findById("user-3-uuid")).thenReturn(Optional.of(retailer));
+
+        assertThrows(RestrictedTransferException.class, () -> batchService.sellPack(request));
+    }
+
+    @Test
+    @DisplayName("Sell Pack FAIL: Retailer does not own the batch or pack")
+    void sellPack_Fail_NoCustody() {
+        SellPackRequest request = new SellPackRequest();
+        request.setPackId("PAN-P-456");
+        request.setRetailerId("user-3-uuid");
+
+        when(packs.findByVerificationCode("PAN-P-456")).thenReturn(Optional.of(pack));
+        when(userAccounts.findById("user-3-uuid")).thenReturn(Optional.of(retailer));
+
+        when(packLogisticsRepo.findTopByPackOrderByCreatedDesc(pack)).thenReturn(Optional.empty());
+
+        BatchLogistics batchMove = new BatchLogistics();
+        batchMove.setRecipient(wholesaler);
+        when(batchLogisticsRepo.findTopByBatchOrderByCreatedDesc(batch)).thenReturn(Optional.of(batchMove));
+
+        assertThrows(RestrictedTransferException.class, () -> batchService.sellPack(request));
+    }
 }
