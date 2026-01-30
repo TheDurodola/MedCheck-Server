@@ -3,6 +3,7 @@ package com.yrsd.medcheck.dtos.responses;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -13,5 +14,5 @@ public class VerifyPackResponse {
     private Map<String, String> batch;
     private Map<String, String> pack;
     private Map<String, String> sachet;
-    private Set<String> history;
+    private List<String> history;
 }

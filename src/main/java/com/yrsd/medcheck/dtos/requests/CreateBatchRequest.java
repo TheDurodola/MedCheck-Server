@@ -23,5 +23,5 @@ public class CreateBatchRequest {
     private String drugId;
 
 
-    private String manufacturerId;
+    private String manufacturing_employee_Id;
 }

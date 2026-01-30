@@ -20,12 +20,12 @@ public class PackLogistics {
 
     @ManyToOne
     @JoinColumn(name = "sender_id")
-    private UserAccount sender;
+    private Organisation sender;
 
 
     @ManyToOne
     @JoinColumn(name = "recipient_id")
-    private UserAccount recipient;
+    private Organisation recipient;
 
 
     @ManyToOne

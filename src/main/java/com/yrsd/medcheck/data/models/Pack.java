@@ -21,6 +21,9 @@ public class Pack {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
+    @Column(unique = true, nullable = false)
+    private String packIdentifier;
+
     @CreatedDate
     @Column(nullable = false, updatable = false)
     private Instant created;

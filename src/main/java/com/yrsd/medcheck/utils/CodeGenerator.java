@@ -23,12 +23,12 @@ public class CodeGenerator {
     }
 
 
-    public static String generateDrugCode(String drug){
+    public static String generateCode(String word){
         StringBuilder sb = new StringBuilder(3);
 
         for (int i = 0; i < 3; i++) {
-            int randomIndex = random.nextInt(drug.length());
-            sb.append(drug.charAt(randomIndex));
+            int randomIndex = random.nextInt(word.length());
+            sb.append(word.charAt(randomIndex));
         }
 
 

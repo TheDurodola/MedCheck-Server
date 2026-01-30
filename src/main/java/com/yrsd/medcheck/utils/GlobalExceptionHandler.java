@@ -191,5 +191,32 @@ public class GlobalExceptionHandler {
 
 
 
+    @ExceptionHandler(value = OrganizationDoesntExistException.class)
+    public ResponseEntity<ExceptionResponse> handleException(@NonNull OrganizationDoesntExistException e) {
+        ExceptionResponse exception = new ExceptionResponse(HttpStatus.BAD_REQUEST.value(),
+                e.getMessage(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception);
+    }
+
+    @ExceptionHandler(value = InvalidOrganisationCodeException.class)
+    public ResponseEntity<ExceptionResponse> handleException(@NonNull InvalidOrganisationCodeException e) {
+        ExceptionResponse exception = new ExceptionResponse(HttpStatus.BAD_REQUEST.value(),
+                e.getMessage(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception);
+    }
+
+    @ExceptionHandler(value = RestrictedTransferException.class)
+    public ResponseEntity<ExceptionResponse> handleException(@NonNull RestrictedTransferException e) {
+        ExceptionResponse exception = new ExceptionResponse(HttpStatus.BAD_REQUEST.value(),
+                e.getMessage(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception);
+    }
+
 
 }

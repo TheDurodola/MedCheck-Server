@@ -38,7 +38,7 @@ public class ManufacturerController {
 
     @PostMapping("/batch")
     public ResponseEntity<CreateBatchResponse> createBatch(@Valid @RequestBody CreateBatchRequest request, Authentication authentication) {
-        request.setManufacturerId(Objects.requireNonNull(authentication.getPrincipal()).toString());
+        request.setManufacturing_employee_Id(Objects.requireNonNull(authentication.getPrincipal()).toString());
         CreateBatchResponse response = batchService.createBatch(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }

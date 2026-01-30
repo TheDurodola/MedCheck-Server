@@ -12,4 +12,6 @@ import java.util.Optional;
 public interface PackLogisticsRepo extends JpaRepository<PackLogistics, String> {
     Optional<List<PackLogistics>> findByPackIdOrderByCreatedAsc(String packId);
     Optional<PackLogistics> findTopByPackOrderByCreatedDesc(Pack pack);
+    Optional<PackLogistics> findByPack(Pack pack);
+    boolean existsByPack(Pack pack);
 }

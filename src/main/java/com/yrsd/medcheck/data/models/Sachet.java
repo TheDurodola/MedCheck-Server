@@ -31,8 +31,6 @@ public class Sachet {
     private boolean isConsumed = false;
 
 
-    private BigInteger numberOfPills;
-
     private BigInteger verificationCount;
 
     private String verificationCode;

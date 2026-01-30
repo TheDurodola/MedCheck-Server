@@ -23,6 +23,9 @@ public class Batch {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
+    @Column(nullable = false, unique = true)
+    private String batchIdentifier;
+
     @CreatedDate
     @Column(nullable = false, updatable = false)
     private Instant created;
@@ -30,11 +33,6 @@ public class Batch {
     @LastModifiedDate
     @Column(nullable = false, updatable = false)
     private Instant lastModified;
-    @CreatedBy
-    @Column(updatable = false)
-    private String createdBy;
-
-
 
 
     @Column(nullable = false)

@@ -1,5 +1,6 @@
 package com.yrsd.medcheck.data.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.yrsd.medcheck.data.models.enums.AccountStatus;
 import com.yrsd.medcheck.data.models.enums.Gender;
 import com.yrsd.medcheck.data.models.enums.Role;
@@ -55,11 +56,16 @@ public class UserAccount {
     @Enumerated(EnumType.STRING)
     private Role role;
 
-    @Column(nullable = true)
+    @Column
     private String profilePictureUrl;
 
     @Column(nullable = false)
     private LocalDate dateOfBirth;
+
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "organisation_id")
+    private Organisation organisation;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)

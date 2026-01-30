@@ -38,8 +38,8 @@ public class Drug {
     private String drugCode;
 
     @ManyToOne
-    @JoinColumn(name = "manufacturer_id")
-    private UserAccount manufacturer;
+    @JoinColumn(name = "manufacturing_company_id")
+    private Organisation manufacturer;
 
     @CreatedDate
     @Column(nullable = false, updatable = false)

@@ -1,12 +1,17 @@
 package com.yrsd.medcheck.services;
 
+import com.yrsd.medcheck.data.models.Organisation;
 import com.yrsd.medcheck.data.models.UserAccount;
+import com.yrsd.medcheck.data.models.enums.Role;
+import com.yrsd.medcheck.data.repositories.Organisations;
 import com.yrsd.medcheck.data.repositories.UserAccounts;
 import com.yrsd.medcheck.dtos.requests.RegisterUserRequest;
+import com.yrsd.medcheck.dtos.requests.UploadProfilePictureRequest;
+import com.yrsd.medcheck.dtos.responses.CloudServiceResponse;
 import com.yrsd.medcheck.dtos.responses.RegisterUserResponse;
-import com.yrsd.medcheck.exceptions.EmailAlreadyExistException;
-import com.yrsd.medcheck.exceptions.InvalidPhoneNumberException;
-import com.yrsd.medcheck.exceptions.UsernameAlreadyExistException;
+import com.yrsd.medcheck.dtos.responses.UploadProfilePictureResponse;
+import com.yrsd.medcheck.exceptions.*;
+import com.yrsd.medcheck.proxy.cloud.CloudService;
 import com.yrsd.medcheck.services.interfaces.AuthService;
 import com.yrsd.medcheck.utils.Validator;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +23,6 @@ import org.springframework.stereotype.Service;
 
 import static com.yrsd.medcheck.utils.Mutator.mutate;
 import static com.yrsd.medcheck.utils.Mutator.standardizePhoneNumber;
-import static com.yrsd.medcheck.utils.Validator.isValid;
 import static com.yrsd.medcheck.utils.Validator.validate;
 
 @Service
@@ -29,7 +33,8 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final UserAccounts userAccounts;
     private final ModelMapper modelMapper;
-//    private final CloudService cloudService;
+    private final Organisations organisations;
+    private final CloudService cloudService;
 
     public RegisterUserResponse registerUser(RegisterUserRequest request) {
         validate(request);
@@ -40,7 +45,7 @@ public class AuthServiceImpl implements AuthService {
 
 
         if (!Validator.isValid(request.getPhoneNumber())) {
-            throw new InvalidPhoneNumberException("This is not a Nigeria Phone Number");
+            throw new InvalidPhoneNumberException("This is not a Nigeria phone number");
         }
 
         request.setPhoneNumber(standardizePhoneNumber(request.getPhoneNumber()));
@@ -52,6 +57,24 @@ public class AuthServiceImpl implements AuthService {
         mutate(userAccount);
 
 
+        if (!Role.CONSUMER.name().equalsIgnoreCase(request.getRole()) && !Role.ADMINISTRATOR.name()
+                .equalsIgnoreCase(request.getRole())
+                && Role.INVESTIGATOR.name().equalsIgnoreCase(request.getRole())) {
+
+            if (request.getOrganisationId() == null | request.getOrganisationId() == null) {
+                throw new InvalidOrganisationCodeException("The organization fields ae required for retailers, " +
+                        "wholesalers, and manufacturers.");
+            }
+
+            Organisation organisation = organisations.findById(request.getOrganisationId()).orElseThrow(() ->
+                    new OrganizationDoesntExistException("This organisation doesn't exist"));
+
+            if (!request.getOrganisationCode().equals(organisation.getOrganizationCode())) {
+                throw new InvalidOrganisationCodeException("Your organisation code is invalid. " +
+                        "Contact the appropriate personnel");
+            }
+            organisation.addUserAccount(userAccount);
+        }
 
         UserAccount savedUserAccount = userAccounts.save(userAccount);
         log.info("user {} added to database", request.getUsername());
@@ -60,11 +83,12 @@ public class AuthServiceImpl implements AuthService {
 
 
 
-//    public UploadProfilePictureResponse uploadProfilePicture(UploadProfilePictureRequest request){
-//        CloudServiceResponse cloudServiceResponse = cloudService.uploadProfilePicture(request);
+    public UploadProfilePictureResponse uploadProfilePicture(UploadProfilePictureRequest request){
+        CloudServiceResponse cloudServiceResponse = cloudService.uploadProfilePicture(request);
+        //TODO: Work on Profile Picture
 //        userAccount.setProfilePictureUrl(cloudServiceResponse.getImageUrl());
-//        return null;
-//    }
+        return null;
+    }
 
     private void validateUniqueness(@NonNull RegisterUserRequest request) {
         if (userAccounts.existsByUsername(request.getUsername())) {
@@ -74,8 +98,6 @@ public class AuthServiceImpl implements AuthService {
             throw new EmailAlreadyExistException(request.getEmail() + " already exists");
         }
     }
-
-
 
 
 }

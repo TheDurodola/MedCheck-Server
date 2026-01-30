@@ -16,14 +16,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigInteger;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
+import java.time.*;
 import java.util.*;
 
 import static com.yrsd.medcheck.utils.CodeGenerator.generateCode;
+import static com.yrsd.medcheck.utils.Mutator.formatInstant;
 
 @Slf4j
 @Service
@@ -31,6 +28,7 @@ import static com.yrsd.medcheck.utils.CodeGenerator.generateCode;
 @RequiredArgsConstructor
 public class BatchServiceImpl implements BatchService {
 
+    private final Organisations organisations;
     private final UserAccounts userAccounts;
     private final Batches batches;
     private final Sachets sachets;
@@ -42,13 +40,17 @@ public class BatchServiceImpl implements BatchService {
 
     @Override
     public CreateBatchResponse createBatch(@NonNull CreateBatchRequest request) {
+        UserAccount userAccount = userAccounts.findByUsername(request.getManufacturing_employee_Id()).orElseThrow(()
+                -> new UsernameNotFoundException(request.getManufacturing_employee_Id()));
+
 
         Drug drug = drugs.findById(request.getDrugId())
                 .orElseThrow(() -> new DrugDoesntExistException("Drug with ID " + request.getDrugId() + " not found"));
 
 
-        log.info("Drug = {}, Request = {}", drug.getManufacturer().getUsername(), request.getManufacturerId());
-        if (!drug.getManufacturer().getUsername().equals(request.getManufacturerId())) {
+        log.info("Organisation = {}, Drug = {}, Employee Username = {}", drug.getManufacturer().getName(),
+                drug.getBrandName() , request.getManufacturing_employee_Id());
+        if (!drug.getManufacturer().equals(userAccount.getOrganisation())) {
             throw new UnauthorizedException("Unauthorized: Invalid Manufacturer");
         }
 
@@ -78,58 +80,34 @@ public class BatchServiceImpl implements BatchService {
         UserAccount receiver = userAccounts.findById(request.getReceiverId()).orElseThrow(() ->
                 new UsernameNotFoundException("User not found"));
 
-        if (sender.getRole() == Role.MANUFACTURER) {
-            validateManufacturerTransfer(batch, receiver);
-        }
-        else if (sender.getRole() == Role.WHOLESALER) {
-            validateWholesalerTransfer(receiver);
-            validateCustody(batch, sender);
-        }
-        else {
+        validateAuthority(sender, batch, receiver);
 
-            throw new RestrictedTransferException("Your role is not authorized to initiate transfers.");
-        }
 
-        if (receiver.getRole().toString().equals("MANUFACTURER")) {
-            throw new RestrictedTransferException("Manufacturer cannot transfer to another Manufacturer");
-        }
-
-        if (!sender.getUsername().equals(batch.getDrug().getManufacturer().getUsername())) {
-            throw new UnauthorizedException("Only The Manufacturer that created the Batch can transfer it");
-        }
 
         BatchLogistics batchLogistics = new BatchLogistics();
         batchLogistics.setBatch(batch);
-        batchLogistics.setSender(sender);
-        batchLogistics.setRecipient(receiver);
+        batchLogistics.setSender(sender.getOrganisation());
+        batchLogistics.setRecipient(receiver.getOrganisation());
 
         batchLogisticsRepo.save(batchLogistics);
-        return null;
+
+        TransferBatchResponse response = new  TransferBatchResponse();
+        response.setMessage("Batch transferred successfully");
+        response.setTimestamp(LocalDateTime.now());
+        return response;
     }
 
     @Override
     public TransferPackResponse transferPack(@NonNull TransferPackRequest request) {
-        Pack pack = packs.findById(request.getPackId()).orElseThrow(() ->
-                new PackDoesntExistException("No Such Pack Exists"));
+        UserAccount sender = userAccounts.findByUsername(request.getSenderId()).orElseThrow(() -> new UsernameNotFoundException("Sender not found"));
+        UserAccount receiver =  userAccounts.findById(request.getReceiverId()).orElseThrow(() -> new UsernameNotFoundException("Receiver not found"));
+        Pack pack = packs.findById(request.getPackId()).orElseThrow(() -> new PackDoesntExistException("Pack with ID " + request.getPackId() + " not found"));
         Batch batch = pack.getBatch();
-        if (!batchLogisticsRepo.existsBatchLogisticsByBatch(batch)) {
-            throw new RestrictedTransferException("This pack is yet to be transfer from Manufacturer");
-        }
-        PackLogistics packLogistics = modelMapper.map(pack, PackLogistics.class);
 
-        UserAccount sender = userAccounts.findById(request.getSenderId()).orElseThrow(() ->
-                new UsernameNotFoundException("Sender not found"));
-        UserAccount receiver = userAccounts.findById(request.getReceiverId()).orElseThrow(() ->
-                new UsernameNotFoundException("Receiver not found"));
-
-        if (sender.getRole().toString().equals("MANUFACTURER")) {
-            throw new RestrictedTransferException("Manufacturers cannot transfer Packs, Only Batch");
-        }
-        packLogistics.setSender(sender);
-        packLogistics.setRecipient(receiver);
-
+        validateCustody(request, pack, sender, batch);
+        PackLogistics packLogistics = buildPackLogisticsRepo(pack, sender, receiver);
         packLogisticsRepo.save(packLogistics);
-        return null;
+        return buildResponse(receiver, sender);
     }
 
     public SellPackResponse sellPack(@NonNull SellPackRequest request) {
@@ -141,18 +119,14 @@ public class BatchServiceImpl implements BatchService {
                 .orElseThrow(() -> new UsernameNotFoundException("Retailer not found"));
 
 
-        if (retailer.getRole() != Role.RETAILER) {
+        if (retailer.getRole() != Role.RETAIL_EMPLOYEE) {
             throw new UnauthorizedException("Only Retailers can mark items as sold to consumers.");
         }
-
-
         if (pack.isSold()) {
             throw new RestrictedTransferException("This pack has already been sold!");
         }
 
         validateRetailerCustody(pack, retailer);
-
-
         pack.setSold(true);
 
         packs.save(pack);
@@ -178,8 +152,8 @@ public class BatchServiceImpl implements BatchService {
 
         response.setHistory(new ArrayList<>());
         for (BatchLogistics batchLogistics : batchRecords) {
-            String record = String.format("From %s to %s on %s", batchLogistics.getSender().getUsername(),
-                    batchLogistics.getRecipient().getUsername(), formatInstant(batchLogistics.getCreated()));
+            String record = String.format("From %s to %s on %s", batchLogistics.getSender().getName(),
+                    batchLogistics.getRecipient().getName(), formatInstant(batchLogistics.getCreated()));
             response.getHistory().add(record);
         }
 
@@ -202,7 +176,7 @@ public class BatchServiceImpl implements BatchService {
         response.getDrug().put("genericName", drug.getGenericName());
         response.getDrug().put("nafdacRegistrationNumber", drug.getNafdacRegistrationNumber());
         response.getDrug().put("drugCode", drug.getDrugCode());
-        response.getDrug().put("manufacturer", drug.getManufacturer().getUsername());
+        response.getDrug().put("manufacturer", drug.getManufacturer().getName());
 
         response.setPack(new HashMap<>());
         response.getPack().put("noOfPacks", String.valueOf(packList.size()));
@@ -211,6 +185,37 @@ public class BatchServiceImpl implements BatchService {
         response.getSachet().put("noOfSachets", String.valueOf(totalSachets));
 
         return response;
+    }
+
+    public AllBatchesResponse getAllBatches(AllBatchesRequest request){
+        AllBatchesResponse response = new AllBatchesResponse();
+        response.setBatches(new ArrayList<>());
+        Drug drug = drugs.findById(request.getDrugId()).orElseThrow(() -> new DrugDoesntExistException("This drug doesn't exist."));
+        List<Batch> batchList = batches.findByDrug(drug).orElseThrow(() -> new BatchDoesntExistException("This drug doesn't have any batches yet."));
+
+        for (Batch batch : batchList) {
+            List<String> drugDetails = new ArrayList<>();
+            drugDetails.add(batch.getId());
+            drugDetails.add(batch.getBatchIdentifier());
+            response.getBatches().add(drugDetails);
+        }
+        return response;
+
+    }
+
+    public AllPackResponse getAllPacks(AllPackRequest request){
+        AllPackResponse response = new AllPackResponse();
+        response.setBatches(new ArrayList<>());
+        List<Pack> packList = packs.findAllByBatch_Id(request.getBatchId()).orElseThrow(() -> new BatchDoesntExistException("This batch doesn't exist."));
+
+        for (Pack pack : packList) {
+            List<String> drugDetails = new ArrayList<>();
+            drugDetails.add(pack.getId());
+            drugDetails.add(pack.getPackIdentifier());
+            response.getBatches().add(drugDetails);
+        }
+        return response;
+
     }
 
     @Override
@@ -227,11 +232,16 @@ public class BatchServiceImpl implements BatchService {
         Drug drug = pack.getDrug();
         Batch batch = pack.getBatch();
         List<Sachet> sachetList = pack.getSachets();
+        List<BatchLogistics> batchRecords = batchLogisticsRepo.findByBatchIdOrderByCreatedAsc(batch.getId())
+                .orElse(new ArrayList<>());
+
+        List<PackLogistics> packRecords = packLogisticsRepo.findByPackIdOrderByCreatedAsc(pack.getId())
+                .orElse(new ArrayList<>());
 
         response.setPack(new HashMap<>());
         response.getPack().put("verificationCode", verificationCode);
         response.getPack().put("packId", pack.getId());
-        response.getPack().put("verificationCount", pack.getVerificationCount().toString());
+        response.getPack().put("verificationCount", pack.getVerificationCount().min(BigInteger.ONE).toString());
 
         response.setBatch(new HashMap<>());
         response.getBatch().put("batchId", batch.getId());
@@ -241,10 +251,25 @@ public class BatchServiceImpl implements BatchService {
         response.setDrug(new HashMap<>());
         response.getDrug().put("brandName", drug.getBrandName());
         response.getDrug().put("genericName", drug.getGenericName());
-        response.getDrug().put("manufacturer", drug.getManufacturer().getUsername());
+        response.getDrug().put("manufacturer", drug.getManufacturer().getName());
+        response.getDrug().put("nafdac", drug.getNafdacRegistrationNumber());
+        response.getDrug().put("description", drug.getDescription());
 
         response.setSachet(new HashMap<>());
         response.getSachet().put("noOfSachets", String.valueOf(sachetList.size()));
+
+        response.setHistory(new ArrayList<>());
+        for (BatchLogistics batchLogistics : batchRecords) {
+            String record = String.format("From %s to %s on %s", batchLogistics.getSender().getName(),
+                    batchLogistics.getRecipient().getName(), formatInstant(batchLogistics.getCreated()));
+            response.getHistory().add(record);
+        }
+
+        for (PackLogistics packLogistics : packRecords) {
+            String record = String.format("From %s to %s on %s", packLogistics.getSender().getName(),
+                    packLogistics.getRecipient().getName(), formatInstant(packLogistics.getCreated()));
+            response.getHistory().add(record);
+        }
 
         return response;
     }
@@ -277,7 +302,7 @@ public class BatchServiceImpl implements BatchService {
         response.setDrug(new HashMap<>());
         response.getDrug().put("brandName", drug.getBrandName());
         response.getDrug().put("genericName", drug.getGenericName());
-        response.getDrug().put("manufacturer", drug.getManufacturer().getUsername());
+        response.getDrug().put("manufacturer", drug.getManufacturer().getName());
 
         return response;
     }
@@ -303,6 +328,7 @@ public class BatchServiceImpl implements BatchService {
             batch.setManufactureDate(LocalDate.now());
             batch.setVerificationCount(BigInteger.ZERO);
             batch.setVerificationCode(drug.getDrugCode() + "B" + generateCode());
+            batch.setBatchIdentifier(drug.getDrugCode() + "B" + batches.count());
 
             createPacks(request, drug, batch);
             batchList.add(batch);
@@ -334,6 +360,7 @@ public class BatchServiceImpl implements BatchService {
             pack.setVerificationCount(BigInteger.ZERO);
             pack.setDrug(drug);
             pack.setBatch(batch);
+            pack.setPackIdentifier(drug.getDrugCode() + "P" + packs.count());
             createSachets(request, drug, pack);
             batch.addPack(pack);
         }
@@ -345,8 +372,8 @@ public class BatchServiceImpl implements BatchService {
 
         if (lastPackMovement.isPresent()) {
 
-            if (!lastPackMovement.get().getRecipient().equals(retailer)) {
-                throw new RestrictedTransferException("Custody Error: You do not own this pack.");
+            if (!lastPackMovement.get().getRecipient().equals(retailer.getOrganisation())) {
+                throw new RestrictedTransferException("Custody Error: Your organisation doesn't own this pack.");
             }
             return;
         }
@@ -355,20 +382,21 @@ public class BatchServiceImpl implements BatchService {
         BatchLogistics lastBatchMovement = batchLogisticsRepo.findTopByBatchOrderByCreatedDesc(batch)
                 .orElseThrow(() -> new RestrictedTransferException("This batch is still with the manufacturer."));
 
-        if (!lastBatchMovement.getRecipient().equals(retailer)) {
+        if (!lastBatchMovement.getRecipient().equals(retailer.getOrganisation())) {
             throw new RestrictedTransferException("Custody Error: You do not own the batch this pack belongs to.");
         }
     }
 
     private void validateCustody(Batch batch, UserAccount currentSender) {
         BatchLogistics lastMovement = batchLogisticsRepo.findTopByBatchOrderByCreatedDesc(batch)
-                .orElseThrow(() -> new RestrictedTransferException("This batch has never been moved from the manufacturer yet."));
+                .orElseThrow(() -> new RestrictedTransferException("This batch has never been moved from the" +
+                        " manufacturer yet."));
 
 
-        if (!lastMovement.getRecipient().equals(currentSender)) {
+        if (!lastMovement.getRecipient().equals(currentSender.getOrganisation())) {
             throw new RestrictedTransferException(
                     "Custody Error: You cannot transfer a batch you do not currently possess. " +
-                            "Current holder is: " + lastMovement.getRecipient().getUsername()
+                            "Current holder is: " + lastMovement.getRecipient().getName()
             );
         }
     }
@@ -381,31 +409,79 @@ public class BatchServiceImpl implements BatchService {
         }
 
 
-        if (recipient.getRole() != Role.WHOLESALER) {
-            throw new RestrictedTransferException("Manufacturers can only transfer goods to Wholesalers.");
+        if (recipient.getRole() != Role.WHOLESALE_EMPLOYEE) {
+            throw new RestrictedTransferException("Manufacturers can only transfer goods to wholesalers.");
         }
     }
 
     private void validateWholesalerTransfer(@NonNull UserAccount recipient) {
 
-        boolean isWholesaler = recipient.getRole() == Role.WHOLESALER;
-        boolean isRetailer   = recipient.getRole() == Role.RETAILER;
+        boolean isWholesaler = recipient.getRole() == Role.WHOLESALE_EMPLOYEE;
+        boolean isRetailer   = recipient.getRole() == Role.RETAIL_EMPLOYEE;
 
         if (!isWholesaler && !isRetailer) {
             throw new RestrictedTransferException(
-                    "Wholesalers can only transfer to other Wholesalers or Retailers."
+                    "Wholesalers can only transfer to other wholesalers or retailers."
             );
         }
 
     }
-    private @NonNull String formatInstant(Instant instant) {
-        if (instant == null) return "N/A";
 
-        ZoneId zoneId = ZoneId.of("Africa/Lagos");
-        ZonedDateTime zdt = instant.atZone(zoneId);
+    private void validateAuthority(@NonNull UserAccount sender, Batch batch, UserAccount receiver) {
+        if (sender.getRole().equals(Role.MANUFACTURING_EMPLOYEE)) {
+            validateManufacturerTransfer(batch, receiver);
+        }
+        else if (sender.getRole().equals(Role.WHOLESALE_EMPLOYEE)) {
+            validateWholesalerTransfer(receiver);
+            validateCustody(batch, sender);
+        }
+        else {
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy hh:mm a");
+            throw new RestrictedTransferException("Your role is not authorized to initiate transfers.");
+        }
 
-        return zdt.format(formatter);
+        if (receiver.getRole().equals(Role.MANUFACTURING_EMPLOYEE)) {
+            throw new RestrictedTransferException("Manufacturer cannot transfer to another manufacturer");
+        }
+
+        if (!sender.getOrganisation().equals(batch.getDrug().getManufacturer())) {
+            throw new RestrictedTransferException("Only the manufacturer that created the batch can transfer it");
+        }
+    }
+
+    private static @NonNull PackLogistics buildPackLogisticsRepo(Pack pack, UserAccount sender, UserAccount receiver) {
+        PackLogistics packLogistics = new PackLogistics();
+        packLogistics.setPack(pack);
+        packLogistics.setSender(sender.getOrganisation());
+        packLogistics.setRecipient(receiver.getOrganisation());
+        return packLogistics;
+    }
+
+    private static @NonNull TransferPackResponse buildResponse(UserAccount receiver, UserAccount sender) {
+        TransferPackResponse response = new TransferPackResponse();
+        response.setMessage("Pack transfer successful");
+        response.setReceiver(receiver.getUsername());
+        response.setSender(sender.getUsername());
+        response.setTimestamp(LocalDateTime.now());
+        return response;
+    }
+
+    private void validateCustody(@NonNull TransferPackRequest request, Pack pack, UserAccount sender, Batch batch) {
+        if (packLogisticsRepo.existsByPack(pack)) {
+            PackLogistics record = packLogisticsRepo.findTopByPackOrderByCreatedDesc(pack).orElseThrow(()
+                    -> new PackDoesntExistException("Pack with ID " + request.getPackId() + " not found"));
+            if (!record.getRecipient().equals(sender.getOrganisation())) {
+                throw new RestrictedTransferException("Unauthorized: Your organisation is not currently with this Pack");
+            }
+
+        } else if (batchLogisticsRepo.existsByBatch(batch)) {
+            BatchLogistics record = batchLogisticsRepo.findTopByBatchOrderByCreatedDesc(batch).orElseThrow(() ->
+                    new BatchDoesntExistException("Batch with ID " + request.getPackId() + " not found"));
+            if (!record.getRecipient().equals(sender.getOrganisation())) {
+                throw new RestrictedTransferException("Unauthorized: Your organisation is not currently with this Batch");
+            } else if (!batchLogisticsRepo.existsBatchLogisticsByBatch(batch)) {
+                throw new RestrictedTransferException("Unauthorized: Batch hasn't been released");
+            }
+        }
     }
 }
