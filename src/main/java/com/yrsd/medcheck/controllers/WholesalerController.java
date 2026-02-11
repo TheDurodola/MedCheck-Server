@@ -27,14 +27,16 @@ public class WholesalerController {
     private final BatchService batchService;
 
     @PostMapping("/distribution/pack")
-    public ResponseEntity<TransferPackResponse> distributePack(@Valid @RequestBody TransferPackRequest request, Authentication authentication) {
+    public ResponseEntity<TransferPackResponse> distributePack(@Valid @RequestBody TransferPackRequest request, 
+                                                               Authentication authentication) {
         request.setSenderId(Objects.requireNonNull(authentication.getPrincipal()).toString());
         TransferPackResponse response = batchService.transferPack(request);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
     @PostMapping("/distribution/batch")
-    public ResponseEntity<TransferBatchResponse> distributeBatch(@Valid @RequestBody TransferBatchRequest request, Authentication authentication) {
+    public ResponseEntity<TransferBatchResponse> distributeBatch(@Valid @RequestBody TransferBatchRequest request,
+                                                                 Authentication authentication) {
         request.setSenderId(Objects.requireNonNull(authentication.getPrincipal()).toString());
         TransferBatchResponse response = batchService.transferBatch(request);
         return ResponseEntity.status(HttpStatus.OK).body(response);

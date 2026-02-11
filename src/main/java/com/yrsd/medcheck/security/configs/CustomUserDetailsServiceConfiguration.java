@@ -4,6 +4,7 @@ import com.yrsd.medcheck.exceptions.AccountNotFoundException;
 import com.yrsd.medcheck.security.dtos.responses.UserAccountResponse;
 import com.yrsd.medcheck.services.interfaces.UserAccountService;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.NonNull;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
@@ -21,7 +22,7 @@ public class CustomUserDetailsServiceConfiguration implements UserDetailsService
     private final UserAccountService accountService;
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    public UserDetails loadUserByUsername(@NonNull String username) throws UsernameNotFoundException {
         try {
             UserAccountResponse response = accountService.getUserAccountBy(username);
             List<SimpleGrantedAuthority> authorities = new ArrayList<SimpleGrantedAuthority>();

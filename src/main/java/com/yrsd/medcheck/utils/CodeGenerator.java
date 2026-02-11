@@ -7,6 +7,7 @@ import java.security.SecureRandom;
 public class CodeGenerator {
 
     private static final String CHAR_SET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    private static final String NUM_SET = "0123456789";
     @Value("${VERIFICATION_CODE_LENGTH}")
     private static int VERIFICATION_CODE_LENGTH = 12;
     private static final SecureRandom random = new SecureRandom();
@@ -33,6 +34,18 @@ public class CodeGenerator {
 
 
         return sb.toString().toUpperCase();
+    }
+
+    public static String generateNumCode(){
+        StringBuilder sb = new StringBuilder(3);
+
+        for (int i = 0; i < 3; i++) {
+            int randomIndex = random.nextInt(NUM_SET.length());
+            sb.append(NUM_SET.charAt(randomIndex));
+        }
+
+
+        return sb.toString();
     }
 
 }

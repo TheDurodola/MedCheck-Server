@@ -16,7 +16,7 @@ public class AdminController {
     private final OrganisationService organisationService;
 
     @PostMapping("/organisation")
-    public ResponseEntity<CreateOrganisationResponse> createOrganisation(CreateOrganisationRequest request){
+    public ResponseEntity<CreateOrganisationResponse> createOrganisation(@RequestBody CreateOrganisationRequest request){
         CreateOrganisationResponse response = organisationService.createOrganisation(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }

@@ -19,8 +19,10 @@ public class RegisterUserRequest {
     private String nationalIdentityNumber;
     private String gender;
     private String role;
-    private String organisationId;
-    private String organisationCode;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate dateOfBirth;
+
+
+    private String organisationId;
+    private String organisationCode;
 }

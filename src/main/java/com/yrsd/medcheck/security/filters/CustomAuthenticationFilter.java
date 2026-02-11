@@ -59,7 +59,7 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
         try {
             InputStream inputStream = request.getInputStream();
             SignInRequest signInRequest = objectMapper.readValue(inputStream, SignInRequest.class);
-
+            signInRequest.setUsername(signInRequest.getUsername().toLowerCase());
             Authentication authentication = new CustomAuthentication(signInRequest.getUsername(), signInRequest.getPassword());
             Authentication result = authenticationManager.authenticate(authentication);
             String jwt = JWT.create()

@@ -20,6 +20,7 @@ import org.jspecify.annotations.NonNull;
 import org.modelmapper.ModelMapper;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import static com.yrsd.medcheck.utils.Mutator.mutate;
 import static com.yrsd.medcheck.utils.Mutator.standardizePhoneNumber;
@@ -36,6 +37,8 @@ public class AuthServiceImpl implements AuthService {
     private final Organisations organisations;
     private final CloudService cloudService;
 
+    @Override
+    @Transactional
     public RegisterUserResponse registerUser(RegisterUserRequest request) {
         validate(request);
         log.info("user {} fields validated", request.getUsername());
@@ -50,8 +53,9 @@ public class AuthServiceImpl implements AuthService {
 
         request.setPhoneNumber(standardizePhoneNumber(request.getPhoneNumber()));
 
+        log.info("testing user role {}", request.getRole());
         UserAccount userAccount = modelMapper.map(request, UserAccount.class);
-        log.info("testing user role {}", userAccount.getRole().toString());
+        userAccount.setRole(Role.valueOf(request.getRole().toUpperCase()));
 
         userAccount.setPassword(passwordEncoder.encode(request.getPassword()));
         mutate(userAccount);
@@ -59,7 +63,7 @@ public class AuthServiceImpl implements AuthService {
 
         if (!Role.CONSUMER.name().equalsIgnoreCase(request.getRole()) && !Role.ADMINISTRATOR.name()
                 .equalsIgnoreCase(request.getRole())
-                && Role.INVESTIGATOR.name().equalsIgnoreCase(request.getRole())) {
+                && !Role.INVESTIGATOR.name().equalsIgnoreCase(request.getRole())) {
 
             if (request.getOrganisationId() == null | request.getOrganisationId() == null) {
                 throw new InvalidOrganisationCodeException("The organization fields ae required for retailers, " +
