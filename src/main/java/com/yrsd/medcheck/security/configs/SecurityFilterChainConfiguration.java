@@ -34,7 +34,8 @@ public class SecurityFilterChainConfiguration {
                         .requestMatchers("/api/v1/investigator/**").hasAuthority("INVESTIGATOR")
                         .requestMatchers("/api/v1/admin/**").hasAuthority("ADMINISTRATOR")
                         .requestMatchers(HttpMethod.POST, "/api/v1/verification/batch")
-                        .hasAnyAuthority("INVESTIGATOR", "MANUFACTURER_EMPLOYEE", "RETAIL_EMPLOYEE", "WHOLESALE_EMPLOYEE")
+                        .hasAnyAuthority("INVESTIGATOR", "MANUFACTURER_EMPLOYEE", "RETAIL_EMPLOYEE",
+                                "WHOLESALE_EMPLOYEE")
                         .requestMatchers(HttpMethod.PUT, "/api/v1/verification/pack").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/v1/verification/sachet/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/test/live/consumer").hasAuthority("CONSUMER")

@@ -10,7 +10,6 @@ import com.yrsd.medcheck.exceptions.*;
 import com.yrsd.medcheck.services.interfaces.BatchService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.aspectj.weaver.ast.Or;
 import org.jspecify.annotations.NonNull;
 import org.modelmapper.ModelMapper;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -42,6 +41,7 @@ public class BatchServiceImpl implements BatchService {
 
     @Override
     public CreateBatchResponse createBatch(@NonNull CreateBatchRequest request) {
+        log.debug("Service: Layer hit");
         UserAccount userAccount = userAccounts.findByUsername(request.getManufacturing_employee_Id()).orElseThrow(()
                 -> new UsernameNotFoundException(request.getManufacturing_employee_Id()));
 
@@ -75,13 +75,14 @@ public class BatchServiceImpl implements BatchService {
 
     @Override
     public TransferBatchResponse transferBatch(@NonNull TransferBatchRequest request) {
+        log.info("Transfer batch request = {}", request);
         Batch batch = batches.findById(request.getBatchId()).orElseThrow(() ->
                 new BatchDoesntExistException("This batch doesn't exist."));
-        UserAccount sender = userAccounts.findByUsername(request.getSenderId()).orElseThrow(() ->
+        UserAccount sender = userAccounts.findById(request.getSenderId()).orElseThrow(() ->
                 new UsernameNotFoundException("User not found"));
-        Organisation receiver = organisations.findById(request.getReceiverId()).orElseThrow(() ->
+        Organisation receiver = organisations.findById(request.getReceiverOrganisationId()).orElseThrow(() ->
                 new OrganizationDoesntExistException("Organisation not found"));
-
+        log.info(receiver.getOrganisationType().toString());
         validateAuthority(sender, batch, receiver);
 
 
@@ -418,8 +419,9 @@ public class BatchServiceImpl implements BatchService {
             throw new RestrictedTransferException("This batch has already left the manufacturing plant.");
         }
 
+        log.info(recipient.getOrganisationType().toString());
 
-        if (recipient.getOrganisationType() != OrganisationType.WHOLESALE) {
+        if (!recipient.getOrganisationType().equals(OrganisationType.WHOLESALE)) {
             throw new RestrictedTransferException("Manufacturers can only transfer goods to wholesalers.");
         }
     }
@@ -438,6 +440,7 @@ public class BatchServiceImpl implements BatchService {
     }
 
     private void validateAuthority(@NonNull UserAccount sender, Batch batch, Organisation receiver) {
+        log.info(receiver.getOrganisationType().toString());
         if (sender.getRole().equals(Role.MANUFACTURING_EMPLOYEE)) {
             validateManufacturerTransfer(batch, receiver);
         }
@@ -446,7 +449,6 @@ public class BatchServiceImpl implements BatchService {
             validateCustody(batch, sender);
         }
         else {
-
             throw new RestrictedTransferException("Your role is not authorized to initiate transfers.");
         }
 
@@ -454,9 +456,9 @@ public class BatchServiceImpl implements BatchService {
             throw new RestrictedTransferException("Manufacturer cannot transfer to another manufacturer");
         }
 
-        if (!sender.getOrganisation().equals(batch.getDrug().getManufacturer())) {
-            throw new RestrictedTransferException("Only the manufacturer that created the batch can transfer it");
-        }
+//        if (!sender.getOrganisation().equals(batch.getDrug().getManufacturer())) {
+//            throw new RestrictedTransferException("Only the manufacturer that created the batch can transfer it");
+//        }
     }
 
     private static @NonNull PackLogistics buildPackLogisticsRepo(Pack pack, UserAccount sender, Organisation receiver) {

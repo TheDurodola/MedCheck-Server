@@ -18,7 +18,7 @@ import java.util.Objects;
 
 @Component
 @RequiredArgsConstructor
-public class CustomAuthenticationProvider implements AuthenticationProvider {
+public class  CustomAuthenticationProvider implements AuthenticationProvider {
 
     private final UserDetailsService userDetailsService;
     private final PasswordEncoder passwordEncoder;
@@ -33,6 +33,7 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
         if (!passwordEncoder.matches(inputtedPassword, userDetails.getPassword())) {
             throw new BadCredentialsException("Invalid Password");
         }
+
         return new CustomAuthentication(username, true, userDetails.getAuthorities());
     }
 

@@ -9,6 +9,6 @@ import lombok.Setter;
 @AllArgsConstructor
 public class TransferBatchRequest {
     private String batchId;
-    private String receiverId;
+    private String receiverOrganisationId;
     private String senderId;
 }

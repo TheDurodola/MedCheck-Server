@@ -87,7 +87,7 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
         } catch (JWTDecodeException | TokenExpiredException | MissingClaimException
                  | AlgorithmMismatchException | SignatureVerificationException e){
             log.error("Error processing request", e);
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
             createErrorResponse(response);
         }
     }
