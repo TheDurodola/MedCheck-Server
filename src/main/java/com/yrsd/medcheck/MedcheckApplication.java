@@ -3,13 +3,16 @@ package com.yrsd.medcheck;
 import io.github.cdimascio.dotenv.Dotenv;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 
-
+@EnableCaching
 @EnableJpaAuditing
 @EnableMethodSecurity
 @SpringBootApplication
+@EnableJpaRepositories(basePackages = "com.yrsd.medcheck.data.repositories")
 public class MedcheckApplication {
 
 	public static void main(String[] args) {

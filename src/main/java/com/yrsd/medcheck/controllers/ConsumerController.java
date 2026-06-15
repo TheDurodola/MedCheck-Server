@@ -24,7 +24,7 @@ public class ConsumerController {
 
     private final BatchService batchService;
 
-    @PostMapping("/distribution/pack")
+    @PostMapping("/consumption/pack")
     public ResponseEntity<TransferPackResponse> consumePack(@Valid @RequestBody TransferPackRequest request, Authentication authentication) {
         request.setSenderId(Objects.requireNonNull(authentication.getPrincipal()).toString());
         TransferPackResponse response = batchService.transferPack(request);

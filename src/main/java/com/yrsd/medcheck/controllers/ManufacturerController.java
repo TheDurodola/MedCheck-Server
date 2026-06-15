@@ -31,7 +31,7 @@ public class ManufacturerController {
 
 
     @PostMapping("/drug")
-    public ResponseEntity<CreateDrugResponse> createUser(@Valid @RequestBody CreateDrugRequest request, Authentication authentication) {
+    public ResponseEntity<CreateDrugResponse> createDrug(@Valid @RequestBody CreateDrugRequest request, Authentication authentication) {
         CreateDrugResponse response = drugService.createDrug(request, Objects.requireNonNull(authentication.getPrincipal()).toString());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }

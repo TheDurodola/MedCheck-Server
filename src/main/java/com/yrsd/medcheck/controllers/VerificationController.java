@@ -8,6 +8,8 @@ import com.yrsd.medcheck.dtos.responses.VerifyPackResponse;
 import com.yrsd.medcheck.dtos.responses.VerifySachetResponse;
 import com.yrsd.medcheck.services.interfaces.BatchService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,6 +29,7 @@ public class VerificationController {
         VerifyBatchResponse response = batchService.verifyBatch(request);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
+
 
     @PutMapping("/pack")
     public ResponseEntity<VerifyPackResponse> verifyPack(@RequestBody VerifyPackRequest request) {
