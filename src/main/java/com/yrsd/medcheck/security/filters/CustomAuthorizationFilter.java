@@ -46,9 +46,11 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-        log.debug("doFilterInternal");
+        log.debug("Authorization Filter Reached");
+        log.debug("Request Path: {}", request.getServletPath() );
         try {
             if (isPublicApi(request)) {
+                log.debug("Request is for a public API");
                 filterChain.doFilter(request, response);
                 return;
             }

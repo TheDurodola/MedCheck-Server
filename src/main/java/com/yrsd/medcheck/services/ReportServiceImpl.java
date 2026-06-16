@@ -1,6 +1,8 @@
 package com.yrsd.medcheck.services;
 
 import com.yrsd.medcheck.data.repositories.Reports;
+import com.yrsd.medcheck.dtos.requests.CreateReportRequest;
+import com.yrsd.medcheck.dtos.responses.CreateReportResponse;
 import com.yrsd.medcheck.services.interfaces.ReportService;
 import org.springframework.stereotype.Service;
 
@@ -12,5 +14,7 @@ public class ReportServiceImpl implements ReportService {
         this.reports = reports;
     }
 
-    
+    public CreateReportResponse createReport(CreateReportRequest request){
+        return null;
+    }
 }

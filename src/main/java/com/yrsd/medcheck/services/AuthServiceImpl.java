@@ -18,9 +18,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 import org.modelmapper.ModelMapper;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.nio.charset.StandardCharsets;
 
 import static com.yrsd.medcheck.utils.Mutator.mutate;
 import static com.yrsd.medcheck.utils.Mutator.standardizePhoneNumber;
@@ -36,6 +41,14 @@ public class AuthServiceImpl implements AuthService {
     private final ModelMapper modelMapper;
     private final Organisations organisations;
     private final CloudService cloudService;
+
+    private final RabbitTemplate rabbitTemplate;
+
+    @Value("${RABBITMQ_EXCHANGE_NAME}")
+    private  String EXCHANGE_NAME;
+
+    @Value("${RABBITMQ_ROUTING_KEY}")
+    private  String ROUTING_KEY;
 
     @Override
     @Transactional
@@ -81,6 +94,8 @@ public class AuthServiceImpl implements AuthService {
         }
 
         UserAccount savedUserAccount = userAccounts.save(userAccount);
+        rabbitTemplate.convertAndSend(EXCHANGE_NAME, ROUTING_KEY, userAccount
+                .getEmail());
         log.info("user {} added to database", request.getUsername());
         return modelMapper.map(savedUserAccount, RegisterUserResponse.class);
     }

@@ -4,6 +4,7 @@ import com.yrsd.medcheck.data.models.enums.Status;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.catalina.User;
 
 @Entity
 @Setter
@@ -20,6 +21,10 @@ public class Report {
     @ManyToOne
     @JoinColumn(name = "organisation_id")
     private Organisation organisation;
+
+    @ManyToOne
+    @JoinColumn(name = "investigator_id")
+    private UserAccount investigator;
 
     @Enumerated(EnumType.STRING)
     private Status status;
