@@ -41,14 +41,13 @@ public class AuthServiceImpl implements AuthService {
     private final ModelMapper modelMapper;
     private final Organisations organisations;
     private final CloudService cloudService;
-
     private final RabbitTemplate rabbitTemplate;
 
     @Value("${RABBITMQ_EXCHANGE_NAME}")
     private  String EXCHANGE_NAME;
 
-    @Value("${RABBITMQ_ROUTING_KEY}")
-    private  String ROUTING_KEY;
+    @Value("${RABBITMQ_USER_REGISTERED_ROUTING_KEY}")
+    private  String RABBITMQ_USER_REGISTERED_ROUTING_KEY;
 
     @Override
     @Transactional
@@ -61,7 +60,7 @@ public class AuthServiceImpl implements AuthService {
 
 
         if (!Validator.isValid(request.getPhoneNumber())) {
-            throw new InvalidPhoneNumberException("This is not a Nigeria phone number");
+            throw new InvalidPhoneNumberException("This is not a Nigerian phone number");
         }
 
         request.setPhoneNumber(standardizePhoneNumber(request.getPhoneNumber()));
@@ -94,7 +93,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         UserAccount savedUserAccount = userAccounts.save(userAccount);
-        rabbitTemplate.convertAndSend(EXCHANGE_NAME, ROUTING_KEY, userAccount
+        rabbitTemplate.convertAndSend(EXCHANGE_NAME, RABBITMQ_USER_REGISTERED_ROUTING_KEY, userAccount
                 .getEmail());
         log.info("user {} added to database", request.getUsername());
         return modelMapper.map(savedUserAccount, RegisterUserResponse.class);

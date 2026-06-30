@@ -18,10 +18,7 @@ import java.util.List;
 @Setter
 @Getter
 @EntityListeners(AuditingEntityListener.class)
-public class Batch {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
+public class Batch  extends InventoryUnit {
 
     @Column(nullable = false, unique = true)
     private String batchIdentifier;

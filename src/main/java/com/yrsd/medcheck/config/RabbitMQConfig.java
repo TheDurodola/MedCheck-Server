@@ -16,8 +16,8 @@ public class RabbitMQConfig {
     @Value("${RABBITMQ_QUEUE_NAME}")
     private String QUEUE_NAME;
 
-    @Value("${RABBITMQ_ROUTING_KEY}")
-    private  String ROUTING_KEY;
+    @Value("${RABBITMQ_USER_REGISTERED_ROUTING_KEY}")
+    private  String RABBITMQ_USER_REGISTERED_ROUTING_KEY;
 
 
     @Bean
@@ -35,7 +35,7 @@ public class RabbitMQConfig {
         return BindingBuilder
                 .bind(queue)
                 .to(exchange)
-                .with(ROUTING_KEY)
+                .with(RABBITMQ_USER_REGISTERED_ROUTING_KEY)
                 .noargs();
     }
 

@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.domain.Auditable;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigInteger;
@@ -16,10 +17,7 @@ import java.util.List;
 @Setter
 @Getter
 @EntityListeners(AuditingEntityListener.class)
-public class Pack {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
+public class Pack extends InventoryUnit {
 
     @Column(unique = true, nullable = false)
     private String packIdentifier;

@@ -29,6 +29,7 @@ public class Validator {
     public static boolean isValid(String rawNumber) {
         PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
         try {
+            log.info("Parsed Number: {}", rawNumber);
             Phonenumber.PhoneNumber number = phoneUtil.parse(rawNumber, "NG");
             return phoneUtil.isValidNumber(number);
         } catch (NumberParseException e) {

@@ -14,10 +14,7 @@ import java.time.Instant;
 @Setter
 @Entity
 @EntityListeners(AuditingEntityListener.class)
-public class Sachet {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
+public class Sachet extends InventoryUnit {
 
     @CreatedDate
     @Column(nullable = false, updatable = false)
