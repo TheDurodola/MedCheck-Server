@@ -10,6 +10,7 @@ import com.yrsd.medcheck.dtos.requests.UploadProfilePictureRequest;
 import com.yrsd.medcheck.dtos.responses.CloudServiceResponse;
 import com.yrsd.medcheck.dtos.responses.RegisterUserResponse;
 import com.yrsd.medcheck.dtos.responses.UploadProfilePictureResponse;
+import com.yrsd.medcheck.events.UserRegisteredEvent;
 import com.yrsd.medcheck.exceptions.*;
 import com.yrsd.medcheck.proxy.cloud.CloudService;
 import com.yrsd.medcheck.services.interfaces.AuthService;
@@ -93,8 +94,9 @@ public class AuthServiceImpl implements AuthService {
         }
 
         UserAccount savedUserAccount = userAccounts.save(userAccount);
-        rabbitTemplate.convertAndSend(EXCHANGE_NAME, RABBITMQ_USER_REGISTERED_ROUTING_KEY, userAccount
-                .getEmail());
+        UserRegisteredEvent registeredEvent = new UserRegisteredEvent(
+                savedUserAccount.getFirstName(), savedUserAccount.getLastName(), savedUserAccount.getEmail());
+        rabbitTemplate.convertAndSend(EXCHANGE_NAME, RABBITMQ_USER_REGISTERED_ROUTING_KEY, registeredEvent);
         log.info("user {} added to database", request.getUsername());
         return modelMapper.map(savedUserAccount, RegisterUserResponse.class);
     }
