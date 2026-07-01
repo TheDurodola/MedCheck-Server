@@ -4,7 +4,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@WebMvcTest(BatchControllerTest.class)
-class BatchControllerTest {
+@WebMvcTest(InvestigatorController.class)
+class InvestigatorControllerTest {
 
 }

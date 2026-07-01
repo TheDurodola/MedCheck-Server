@@ -25,8 +25,10 @@ public class ReportServiceImpl implements ReportService {
     private final ModelMapper mapper;
 
 
-    public CreateReportResponse createReportForSachet(CreateReportRequest request){
-        
+    public CreateReportResponse createReport(CreateReportRequest request){
+
+
+
         Report report = new Report();
         report.setStatus(Status.INITIATED);
         report.setUser(userAccounts

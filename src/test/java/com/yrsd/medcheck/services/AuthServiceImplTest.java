@@ -2,9 +2,11 @@ package com.yrsd.medcheck.services;
 
 import com.yrsd.medcheck.config.MapperConfig;
 import com.yrsd.medcheck.data.models.UserAccount;
+import com.yrsd.medcheck.data.repositories.Organisations;
 import com.yrsd.medcheck.data.repositories.UserAccounts;
 import com.yrsd.medcheck.dtos.requests.RegisterUserRequest;
 import com.yrsd.medcheck.dtos.responses.RegisterUserResponse;
+import com.yrsd.medcheck.events.UserRegisteredEvent;
 import com.yrsd.medcheck.exceptions.*;
 import com.yrsd.medcheck.proxy.cloud.CloudService;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,7 +15,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
 
@@ -22,8 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceImplTest {
@@ -31,8 +34,6 @@ class AuthServiceImplTest {
     private RegisterUserRequest request;
     private UserAccount saved;
 
-    @Spy
-    private ModelMapper modelMapper;
 
     @Mock
     private PasswordEncoder passwordEncoder;
@@ -43,6 +44,12 @@ class AuthServiceImplTest {
     @Mock
     private UserAccounts userAccounts;
 
+    @Mock
+    private Organisations organisations;
+
+    @Mock
+    private RabbitTemplate rabbitTemplate;
+
     @Captor
     private ArgumentCaptor<UserAccount> userAccountCaptor;
 
@@ -51,9 +58,17 @@ class AuthServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        modelMapper = new ModelMapper();
-
+        ModelMapper modelMapper = new ModelMapper();
         MapperConfig.configureMatchingStrategy(modelMapper);
+
+        authService = new AuthServiceImpl(
+                passwordEncoder,
+                userAccounts,
+                modelMapper,
+                organisations,
+                cloudService,
+                rabbitTemplate
+                );
 
         request = new RegisterUserRequest();
         request.setDateOfBirth(LocalDate.of(2000, 1, 1));
@@ -69,13 +84,18 @@ class AuthServiceImplTest {
         request.setMiddleName("John");
         saved = modelMapper.map(request, UserAccount.class);
 
+        ReflectionTestUtils.setField(authService, "EXCHANGE_NAME", "medcheck.auth.exchange");
+        ReflectionTestUtils.setField(authService, "RABBITMQ_USER_REGISTERED_ROUTING_KEY", "auth.user.registered");
+
     }
 
 
     @Test
     void saveAUserAccount() {
         when(userAccounts.save(any(UserAccount.class))).thenReturn(new UserAccount());
-        authService.registerUser(request);
+        doNothing().when(rabbitTemplate)
+                .convertAndSend(any(String.class), any(String.class), any(UserRegisteredEvent.class));
+        RegisterUserResponse response = authService.registerUser(request);
         verify(userAccounts, Mockito.times(1)).save(Mockito.any(UserAccount.class));
     }
 
@@ -83,6 +103,8 @@ class AuthServiceImplTest {
     void returnTheRightResponse() {
 
         when(userAccounts.save(any(UserAccount.class))).thenReturn(saved);
+        doNothing().when(rabbitTemplate)
+                .convertAndSend(any(String.class), any(String.class), any(Object.class));
         RegisterUserResponse response = authService.registerUser(request);
         assertThat(response.getFirstName()).isNotNull();
         assertThat(response.getFirstName()).isEqualTo("John");
