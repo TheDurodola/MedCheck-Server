@@ -5,6 +5,4 @@ public enum Status {
     DENIED,
     CONFIRMED,
     INVESTIGATING,
-    PENDING,
-    ASSIGNED
 }

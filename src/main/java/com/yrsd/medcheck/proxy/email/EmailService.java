@@ -7,7 +7,5 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Value;
 
 public interface EmailService {
-
-
     public void sendWelcomeEmail(UserRegisteredEvent event);
 }
