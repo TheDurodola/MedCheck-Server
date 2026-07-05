@@ -3,23 +3,22 @@ package com.yrsd.medcheck.proxy.cloud;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 
-import com.yrsd.medcheck.dtos.requests.RegisterUserRequest;
 import com.yrsd.medcheck.dtos.requests.UploadProfilePictureRequest;
 import com.yrsd.medcheck.dtos.requests.UploadReportImage;
 import com.yrsd.medcheck.dtos.responses.CloudServiceResponse;
-import com.yrsd.medcheck.dtos.responses.UploadProfilePictureResponse;
 import com.yrsd.medcheck.exceptions.FailedFileUploadException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.Map;
 
-@Service
+
+@Component
 @RequiredArgsConstructor
 @Slf4j
-public class CloudinaryCloudService implements CloudService {
+public class CloudinaryCloudClient implements CloudClient {
 
     private final Cloudinary cloudinary;
 
@@ -47,3 +46,4 @@ public class CloudinaryCloudService implements CloudService {
         return null;
     }
 }
+

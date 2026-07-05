@@ -11,22 +11,20 @@ import com.yrsd.medcheck.dtos.responses.CloudServiceResponse;
 import com.yrsd.medcheck.dtos.responses.RegisterUserResponse;
 import com.yrsd.medcheck.dtos.responses.UploadProfilePictureResponse;
 import com.yrsd.medcheck.events.UserRegisteredEvent;
+import com.yrsd.medcheck.events.publishers.AuthEventPublisher;
 import com.yrsd.medcheck.exceptions.*;
-import com.yrsd.medcheck.proxy.cloud.CloudService;
+import com.yrsd.medcheck.proxy.cloud.CloudClient;
 import com.yrsd.medcheck.services.interfaces.AuthService;
 import com.yrsd.medcheck.utils.Validator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 import org.modelmapper.ModelMapper;
-import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.nio.charset.StandardCharsets;
 
 import static com.yrsd.medcheck.utils.Mutator.mutate;
 import static com.yrsd.medcheck.utils.Mutator.standardizePhoneNumber;
@@ -41,14 +39,9 @@ public class AuthServiceImpl implements AuthService {
     private final UserAccounts userAccounts;
     private final ModelMapper modelMapper;
     private final Organisations organisations;
-    private final CloudService cloudService;
-    private final RabbitTemplate rabbitTemplate;
+    private final CloudClient cloudClient;
+    private final AuthEventPublisher eventPublisher;
 
-    @Value("${RABBITMQ_EXCHANGE_NAME}")
-    private  String EXCHANGE_NAME;
-
-    @Value("${RABBITMQ_USER_REGISTERED_ROUTING_KEY}")
-    private  String RABBITMQ_USER_REGISTERED_ROUTING_KEY;
 
     @Override
     @Transactional
@@ -96,7 +89,7 @@ public class AuthServiceImpl implements AuthService {
         UserAccount savedUserAccount = userAccounts.save(userAccount);
         UserRegisteredEvent registeredEvent = new UserRegisteredEvent(
                 savedUserAccount.getFirstName(), savedUserAccount.getLastName(), savedUserAccount.getEmail());
-        rabbitTemplate.convertAndSend(EXCHANGE_NAME, RABBITMQ_USER_REGISTERED_ROUTING_KEY, registeredEvent);
+        eventPublisher.WelcomeEmailEvent(registeredEvent);
         log.info("user {} added to database", request.getUsername());
         return modelMapper.map(savedUserAccount, RegisterUserResponse.class);
     }
@@ -104,7 +97,7 @@ public class AuthServiceImpl implements AuthService {
 
 
     public UploadProfilePictureResponse uploadProfilePicture(UploadProfilePictureRequest request){
-        CloudServiceResponse cloudServiceResponse = cloudService.uploadProfilePicture(request);
+        CloudServiceResponse cloudServiceResponse = cloudClient.uploadProfilePicture(request);
         //TODO: Work on Profile Picture
 //        userAccount.setProfilePictureUrl(cloudServiceResponse.getImageUrl());
         return null;

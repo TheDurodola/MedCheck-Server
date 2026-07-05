@@ -11,6 +11,7 @@ import com.yrsd.medcheck.services.interfaces.ReportService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -49,10 +50,14 @@ public class ReportServiceImpl implements ReportService {
         report.setInventoryUnit(unit);
         reports.save(report);
 
-        return null;
+        return CreateReportResponse
+                .builder()
+                .message("Report created successfully. Once an investigator picks up your case you will be informed.")
+                .build();
     }
 
     public AssignInvestigatorResponse assignInvestigator(AssignInvestigatorRequest request){
+
         if (reportAssignments.existsById(request.getUnitId())){
             throw new UnitUnassignableException("Unit has already been assigned to a investigator");
         }
@@ -77,6 +82,10 @@ public class ReportServiceImpl implements ReportService {
 
         reportAssignments.save(reportAssignment);
         reports.save(report);
+
+        //TODO: Inform the report creator that the case has been picked up by an investigator.
+
+
         return AssignInvestigatorResponse
                 .builder()
                 .message("Successfully assigned investigator")
@@ -85,6 +94,7 @@ public class ReportServiceImpl implements ReportService {
 
 
     @Override
+    @Transactional
     public TransferReportResponse transferReport(TransferReportRequest request) {
 
         Report report = reports.findById(request.getReportId()).orElseThrow(() -> new ReportNotFoundException("Report not found"));
@@ -100,22 +110,19 @@ public class ReportServiceImpl implements ReportService {
             throw new UnauthorizedException("This investigator isn't in-charge of this report");
         }
 
-
-        reportAssignment.setActive(false);
-        reportAssignments.save(reportAssignment);
-
+//        reportAssignment.setActive(false);
+//        reportAssignments.save(reportAssignment);
 
         ReportAssignment newAssignment = new ReportAssignment();
         newAssignment.setReport(report);
         newAssignment.setInvestigator(receiver);
-        newAssignment.setActive(true);
+        newAssignment.setActive(false);
 
         reportAssignments.save(newAssignment);
 
-
         return TransferReportResponse
                 .builder()
-                .message("Report successfully transferred to")
+                .message("Report successfully transferred")
                 .build();
     }
 
@@ -175,6 +182,9 @@ public class ReportServiceImpl implements ReportService {
         //TODO: Integrate an email or push notification to
         // inform the user that made the report that it has
         // been approve and that the payment is being processed
+
+
+        //TODO: Send Payment Request
 
 
         return ApproveReportResponse

@@ -7,8 +7,9 @@ import com.yrsd.medcheck.data.repositories.UserAccounts;
 import com.yrsd.medcheck.dtos.requests.RegisterUserRequest;
 import com.yrsd.medcheck.dtos.responses.RegisterUserResponse;
 import com.yrsd.medcheck.events.UserRegisteredEvent;
+import com.yrsd.medcheck.events.publishers.AuthEventPublisher;
 import com.yrsd.medcheck.exceptions.*;
-import com.yrsd.medcheck.proxy.cloud.CloudService;
+import com.yrsd.medcheck.proxy.cloud.CloudClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,7 +40,7 @@ class AuthServiceImplTest {
     private PasswordEncoder passwordEncoder;
 
     @Mock
-    private CloudService cloudService;
+    private CloudClient cloudClient;
 
     @Mock
     private UserAccounts userAccounts;
@@ -47,9 +48,9 @@ class AuthServiceImplTest {
     @Mock
     private Organisations organisations;
 
-    @Mock
-    private RabbitTemplate rabbitTemplate;
 
+    @Mock
+    private AuthEventPublisher publisher;
     @Captor
     private ArgumentCaptor<UserAccount> userAccountCaptor;
 
@@ -66,9 +67,9 @@ class AuthServiceImplTest {
                 userAccounts,
                 modelMapper,
                 organisations,
-                cloudService,
-                rabbitTemplate
-                );
+                cloudClient,
+                publisher
+        );
 
         request = new RegisterUserRequest();
         request.setDateOfBirth(LocalDate.of(2000, 1, 1));
@@ -93,8 +94,8 @@ class AuthServiceImplTest {
     @Test
     void saveAUserAccount() {
         when(userAccounts.save(any(UserAccount.class))).thenReturn(new UserAccount());
-        doNothing().when(rabbitTemplate)
-                .convertAndSend(any(String.class), any(String.class), any(UserRegisteredEvent.class));
+//        doNothing().when(publisher)
+//                .WelcomeEmailEvent(any(String.class), any(String.class), any(UserRegisteredEvent.class));
         RegisterUserResponse response = authService.registerUser(request);
         verify(userAccounts, Mockito.times(1)).save(Mockito.any(UserAccount.class));
     }
@@ -103,8 +104,8 @@ class AuthServiceImplTest {
     void returnTheRightResponse() {
 
         when(userAccounts.save(any(UserAccount.class))).thenReturn(saved);
-        doNothing().when(rabbitTemplate)
-                .convertAndSend(any(String.class), any(String.class), any(Object.class));
+//        doNothing().when(rabbitTemplate)
+//                .convertAndSend(any(String.class), any(String.class), any(Object.class));
         RegisterUserResponse response = authService.registerUser(request);
         assertThat(response.getFirstName()).isNotNull();
         assertThat(response.getFirstName()).isEqualTo("John");

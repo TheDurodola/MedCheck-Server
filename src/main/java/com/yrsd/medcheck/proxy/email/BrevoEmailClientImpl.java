@@ -7,46 +7,41 @@ import brevoModel.SendSmtpEmail;
 import brevoModel.SendSmtpEmailSender;
 import brevoModel.SendSmtpEmailTo;
 import com.yrsd.medcheck.events.UserRegisteredEvent;
+import com.yrsd.medcheck.exceptions.EmailDeliveryException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.AmqpRejectAndDontRequeueException;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 @Slf4j
-@Service
+@Component
 @RequiredArgsConstructor
-public class BrevoEmailServiceImpl implements EmailService {
-
-
+public class BrevoEmailClientImpl implements EmailClient {
 
     private final TransactionalEmailsApi transactionalEmailsApi;
     private final SendSmtpEmailSender sendSmtpEmailSender;
 
 
-
     @Override
-    @RabbitListener( queues = {"${RABBITMQ_QUEUE_NAME}"})
-    public void sendWelcomeEmail(UserRegisteredEvent event) {
+    public void sendWelcomeEmail(UserRegisteredEvent event) throws EmailDeliveryException {
 
         log.info("Send Welcome Email Consumer hit");
-        TransactionalEmailsApi apiInstance = new TransactionalEmailsApi();
-        apiInstance.setApiClient(transactionalEmailsApi.getApiClient());
 
-        SendSmtpEmail sendSmtpEmail = new SendSmtpEmail();
-        sendSmtpEmail.setSender(sendSmtpEmailSender);
-        sendSmtpEmail.to(List.of(new SendSmtpEmailTo().email(event.email())));
-        sendSmtpEmail.setSubject("Welcome to MedCheck!");
-        sendSmtpEmail.setHtmlContent("<p>Hi " + event.firstName() + ", welcome aboard!</p>");
+        SendSmtpEmail email = new SendSmtpEmail();
+        email.setSender(sendSmtpEmailSender);
+        email.to(List.of(new SendSmtpEmailTo().email(event.email())));
+        email.setSubject("Welcome to MedCheck!");
+        email.setHtmlContent("<p>Hi " + event.firstName() + ", welcome aboard!</p>");
 
         try {
-            CreateSmtpEmail createSmtpEmail = apiInstance.sendTransacEmail(sendSmtpEmail);
+            CreateSmtpEmail createSmtpEmail = transactionalEmailsApi.sendTransacEmail(email);
             log.info("SMTP Email {} has been sent", createSmtpEmail);
         } catch (ApiException e) {
             log.error("Failed to send welcome email to {}: {}", event.email(), e.getMessage(), e);
-            throw new AmqpRejectAndDontRequeueException("Brevo send failed", e);
+            throw new EmailDeliveryException("Brevo send failed", e);
         }
 
     }
