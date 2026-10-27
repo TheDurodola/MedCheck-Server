@@ -23,10 +23,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Instant;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 @Slf4j
 @Component
@@ -60,6 +57,7 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
             InputStream inputStream = request.getInputStream();
             SignInRequest signInRequest = objectMapper.readValue(inputStream, SignInRequest.class);
             signInRequest.setUsername(signInRequest.getUsername().toLowerCase());
+            log.debug("SignInRequest received: {}", signInRequest.getUsername());
             Authentication authentication = new CustomAuthentication(signInRequest.getUsername(), signInRequest.getPassword());
             Authentication result = authenticationManager.authenticate(authentication);
             String jwt = JWT.create()
@@ -88,6 +86,7 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
             response.getOutputStream().write(objectMapper.writeValueAsBytes(error));
             response.flushBuffer();
         } catch (AuthenticationException | JWTCreationException | IllegalArgumentException e) {
+
             log.info("JWTException while sending JWT token to user: {}", e.getMessage());
             Map<String, String> error = new HashMap<>();
             error.put("error", e.getMessage());

@@ -4,6 +4,7 @@ import com.yrsd.medcheck.data.models.*;
 import com.yrsd.medcheck.data.models.enums.OrganisationType;
 import com.yrsd.medcheck.data.models.enums.Role;
 import com.yrsd.medcheck.data.repositories.*;
+import com.yrsd.medcheck.dtos.*;
 import com.yrsd.medcheck.dtos.requests.*;
 import com.yrsd.medcheck.dtos.responses.*;
 import com.yrsd.medcheck.exceptions.*;
@@ -19,17 +20,17 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigInteger;
 import java.time.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.yrsd.medcheck.utils.CodeGenerator.generateCode;
-import static com.yrsd.medcheck.utils.Mutator.formatInstant;
 
 @Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
 public class BatchServiceImpl implements BatchService {
-
     private final Organisations organisations;
+
     private final UserAccounts userAccounts;
     private final Batches batches;
     private final Sachets sachets;
@@ -146,80 +147,32 @@ public class BatchServiceImpl implements BatchService {
         Batch batch = batches.findByVerificationCode(verificationCode)
                 .orElseThrow(() -> new BatchDoesntExistException("Batch doesn't exist"));
 
-        batch.setVerificationCount(batch.getVerificationCount().add(BigInteger.ONE));
-        batches.save(batch);
-
         List<BatchLogistics> batchRecords = batchLogisticsRepo.findByBatchIdOrderByCreatedAsc(batch.getId())
                 .orElse(new ArrayList<>());
+
         Drug drug = batch.getDrug();
         List<Pack> packList = batch.getPacks();
 
-        response.setHistory(new ArrayList<>());
-        for (BatchLogistics batchLogistics : batchRecords) {
-            String record = String.format("From %s to %s on %s", batchLogistics.getSender().getName(),
-                    batchLogistics.getRecipient().getName(), formatInstant(batchLogistics.getCreated()));
-            response.getHistory().add(record);
-        }
+        // Convert batch records to logistics history
+        ArrayList<LogisticsHistory> history = convertBatchRecordToLogisticHistory(batchRecords);
 
+        response.setLogisticsHistory(history);
+        response.setId(batch.getId());
+        response.setExpiryDate(batch.getExpirationDate());
+        response.setManufactureDate(batch.getManufactureDate());
+        response.setVerificationCode(batch.getVerificationCode());
 
-        int totalSachets = packList.stream()
-                .mapToInt(p -> p.getSachets().size())
-                .sum();
+        response.setDrugDetail(new DrugDetail(drug.getBrandName(), drug.getGenericName(),
+                drug.getManufacturer().getName(),
+                drug.getNafdacRegistrationNumber(),drug.getDescription()));
 
+        response.setNoOfPacks(packList.size());
+        response.setNoOfSachetsPerPack(packList.getFirst().getSachets().size());
 
-        response.setBatch(new HashMap<>());
-        response.getBatch().put("verificationCode", verificationCode);
-        response.getBatch().put("batchId", batch.getId());
-        response.getBatch().put("manufactureDate", batch.getManufactureDate().toString());
-        response.getBatch().put("expiryDate", batch.getExpirationDate().toString());
-
-
-        response.setDrug(new HashMap<>());
-        response.getDrug().put("drugId", drug.getId());
-        response.getDrug().put("brandName", drug.getBrandName());
-        response.getDrug().put("genericName", drug.getGenericName());
-        response.getDrug().put("nafdacRegistrationNumber", drug.getNafdacRegistrationNumber());
-        response.getDrug().put("drugCode", drug.getDrugCode());
-        response.getDrug().put("manufacturer", drug.getManufacturer().getName());
-
-        response.setPack(new HashMap<>());
-        response.getPack().put("noOfPacks", String.valueOf(packList.size()));
-
-        response.setSachet(new HashMap<>());
-        response.getSachet().put("noOfSachets", String.valueOf(totalSachets));
+        batch.setVerificationCount(batch.getVerificationCount().add(BigInteger.ONE));
+        batches.save(batch);
 
         return response;
-    }
-
-    public AllBatchesResponse getAllBatches(AllBatchesRequest request){
-        AllBatchesResponse response = new AllBatchesResponse();
-        response.setBatches(new ArrayList<>());
-        Drug drug = drugs.findById(request.getDrugId()).orElseThrow(() -> new DrugDoesntExistException("This drug doesn't exist."));
-        List<Batch> batchList = batches.findByDrug(drug).orElseThrow(() -> new BatchDoesntExistException("This drug doesn't have any batches yet."));
-
-        for (Batch batch : batchList) {
-            List<String> drugDetails = new ArrayList<>();
-            drugDetails.add(batch.getId());
-            drugDetails.add(batch.getBatchIdentifier());
-            response.getBatches().add(drugDetails);
-        }
-        return response;
-
-    }
-
-    public AllPackResponse getAllPacks(AllPackRequest request){
-        AllPackResponse response = new AllPackResponse();
-        response.setBatches(new ArrayList<>());
-        List<Pack> packList = packs.findAllByBatch_Id(request.getBatchId()).orElseThrow(() -> new BatchDoesntExistException("This batch doesn't exist."));
-
-        for (Pack pack : packList) {
-            List<String> drugDetails = new ArrayList<>();
-            drugDetails.add(pack.getId());
-            drugDetails.add(pack.getPackIdentifier());
-            response.getBatches().add(drugDetails);
-        }
-        return response;
-
     }
 
     @Override
@@ -231,84 +184,122 @@ public class BatchServiceImpl implements BatchService {
         Pack pack = packs.findByVerificationCode(verificationCode)
                 .orElseThrow(() -> new PackDoesntExistException("Pack doesn't exist"));
 
-        pack.setVerificationCount(pack.getVerificationCount().add(BigInteger.ONE));
-        packs.save(pack);
-
         Drug drug = pack.getDrug();
         Batch batch = pack.getBatch();
-        List<Sachet> sachetList = pack.getSachets();
+
         List<BatchLogistics> batchRecords = batchLogisticsRepo.findByBatchIdOrderByCreatedAsc(batch.getId())
                 .orElse(new ArrayList<>());
 
         List<PackLogistics> packRecords = packLogisticsRepo.findByPackIdOrderByCreatedAsc(pack.getId())
                 .orElse(new ArrayList<>());
 
-        response.setPack(new HashMap<>());
-        response.getPack().put("verificationCode", pack.getVerificationCode());
-        response.getPack().put("packId", pack.getId());
-        response.getPack().put("verificationCount", String.valueOf(pack.getVerificationCount().subtract(BigInteger.ONE)));
+        response.setVerificationCode(pack.getVerificationCode());
+        response.setVerificationCount(pack.getVerificationCount());
+        response.setId(pack.getId());
 
-        response.setBatch(new HashMap<>());
-        response.getBatch().put("batchId", batch.getId());
-        response.getBatch().put("batchCode", batch.getVerificationCode());
-        response.getBatch().put("expiryDate", batch.getExpirationDate().toString());
+        response.setExpiryDate(batch.getExpirationDate());
+        response.setManufactureDate(batch.getManufactureDate());
 
-        response.setDrug(new HashMap<>());
-        response.getDrug().put("brandName", drug.getBrandName());
-        response.getDrug().put("genericName", drug.getGenericName());
-        response.getDrug().put("manufacturer", drug.getManufacturer().getName());
-        response.getDrug().put("nafdac", drug.getNafdacRegistrationNumber());
-        response.getDrug().put("description", drug.getDescription());
+        response.setDrugDetail(new DrugDetail(drug.getBrandName(),
+                drug.getGenericName(), drug.getManufacturer().getName(),
+                drug.getNafdacRegistrationNumber(),drug.getDescription()));
 
-        response.setSachet(new HashMap<>());
-        response.getSachet().put("noOfSachets", String.valueOf(sachetList.size()));
 
-        response.setHistory(new ArrayList<>());
-        for (BatchLogistics batchLogistics : batchRecords) {
-            String record = String.format("From %s to %s on %s", batchLogistics.getSender().getName(),
-                    batchLogistics.getRecipient().getName(), formatInstant(batchLogistics.getCreated()));
-            response.getHistory().add(record);
-        }
+        response.setNoOfSachets(pack.getSachets().size());
 
-        for (PackLogistics packLogistics : packRecords) {
-            String record = String.format("From %s to %s on %s", packLogistics.getSender().getName(),
-                    packLogistics.getRecipient().getName(), formatInstant(packLogistics.getCreated()));
-            response.getHistory().add(record);
-        }
+        // Convert batch records to logistics history
+        ArrayList<LogisticsHistory> batchHistory = convertBatchRecordToLogisticHistory(batchRecords);
 
+        List<LogisticsHistory> packHistory = convertPackRecordToLogisticsHistory(packRecords);
+
+        batchHistory.addAll(packHistory);
+
+        response.setHistory(batchHistory);
+        pack.setVerificationCount(pack.getVerificationCount().add(BigInteger.ONE));
+        packs.save(pack);
         return response;
     }
 
     @Override
     public VerifySachetResponse verifySachet(@NonNull VerifySachetRequest request) {
-        VerifySachetResponse response = new VerifySachetResponse();
         String verificationCode = request.getSachetVerificationCode();
 
         Sachet sachet = sachets.findByVerificationCode(verificationCode)
                 .orElseThrow(() -> new SachetDoesntExistException("Sachet doesn't exist"));
 
-        sachet.setVerificationCount(sachet.getVerificationCount().add(BigInteger.ONE));
-        sachets.save(sachet);
-
         Drug drug = sachet.getDrug();
         Pack pack = sachet.getPack();
         Batch batch = pack.getBatch();
 
-        response.setSachet(new HashMap<>());
-        response.getSachet().put("verificationCode", verificationCode);
-        response.getSachet().put("sachetId", sachet.getId());
-        response.getSachet().put("verificationCount", sachet.getVerificationCount().toString());
+        List<BatchLogistics> batchRecords = batchLogisticsRepo.findByBatchIdOrderByCreatedAsc(batch.getId())
+                .orElse(new ArrayList<>());
 
-        response.setPack(new HashMap<>());
-        response.getPack().put("packCode", pack.getVerificationCode());
-        response.getPack().put("expiryDate", batch.getExpirationDate().toString());
-        response.getPack().put("manufactureDate", batch.getCreated().toString());
+        List<PackLogistics> packRecords = packLogisticsRepo.findByPackIdOrderByCreatedAsc(pack.getId())
+                .orElse(new ArrayList<>());
 
-        response.setDrug(new HashMap<>());
-        response.getDrug().put("brandName", drug.getBrandName());
-        response.getDrug().put("genericName", drug.getGenericName());
-        response.getDrug().put("manufacturer", drug.getManufacturer().getName());
+        ArrayList<LogisticsHistory> history = convertBatchRecordToLogisticHistory(batchRecords);
 
+        List<LogisticsHistory> packHistory = convertPackRecordToLogisticsHistory(packRecords);
+
+        history.addAll(packHistory);
+
+        sachet.setVerificationCount(sachet.getVerificationCount().add(BigInteger.ONE));
+        Sachet savedSachet = sachets.save(sachet);
+
+        return getVerifySachetResponse(request, savedSachet, batch, drug, history);
+    }
+
+
+
+    
+//    public AllBatchesResponse getAllBatches(AllBatchesRequest request){
+//        AllBatchesResponse response = new AllBatchesResponse();
+//        response.setBatches(new ArrayList<>());
+//        Drug drug = drugs.findById(request.getDrugId()).orElseThrow(() -> new DrugDoesntExistException("This drug doesn't exist."));
+//        List<Batch> batchList = batches.findByDrug(drug).orElseThrow(() -> new BatchDoesntExistException("This drug doesn't have any batches yet."));
+//
+//        for (Batch batch : batchList) {
+//            List<String> drugDetails = new ArrayList<>();
+//            drugDetails.add(batch.getId());
+//            drugDetails.add(batch.getBatchIdentifier());
+//            response.getBatches().add(drugDetails);
+//        }
+//        return response;
+//
+
+//    }
+//    public AllPackResponse getAllPacks(AllPackRequest request){
+//        AllPackResponse response = new AllPackResponse();
+//        response.setBatches(new ArrayList<>());
+//        List<Pack> packList = packs.findAllByBatch_Id(request.getBatchId()).orElseThrow(() -> new BatchDoesntExistException("This batch doesn't exist."));
+//
+//        for (Pack pack : packList) {
+//            List<String> drugDetails = new ArrayList<>();
+//            drugDetails.add(pack.getId());
+//            drugDetails.add(pack.getPackIdentifier());
+//            response.getBatches().add(drugDetails);
+//        }
+//        return response;
+//
+
+//    }
+
+    private static @NonNull VerifySachetResponse getVerifySachetResponse(@NonNull VerifySachetRequest request,
+                                                                         @NonNull Sachet sachet, Batch batch,
+                                                                         Drug drug, ArrayList<LogisticsHistory> history) {
+
+        VerifySachetResponse response = new VerifySachetResponse(request.getSachetVerificationCode(), sachet.getVerificationCount());
+
+        response.setSachetdetail(new SachetDetail(sachet.getId()));
+
+        response.setPackdetail(new PackDetail(batch.getExpirationDate(),
+                batch.getManufactureDate()));
+
+        response.setLogisticsHistory(history);
+
+        response.setDrugdetail(new DrugDetail(drug.getBrandName(),
+                drug.getGenericName(), drug.getManufacturer().getName(),
+                drug.getNafdacRegistrationNumber(), drug.getDescription()));
         return response;
     }
 
@@ -495,5 +486,19 @@ public class BatchServiceImpl implements BatchService {
                 throw new RestrictedTransferException("Unauthorized: Batch hasn't been released");
             }
         }
+    }
+
+    private static @NonNull List<LogisticsHistory> convertPackRecordToLogisticsHistory(List<PackLogistics> packRecords) {
+        return packRecords.stream().map(logistics ->
+                        new LogisticsHistory(ProductType.PACK, logistics.getSender().getName(),
+                                logistics.getRecipient().getName(), logistics.getCreated()))
+                .toList();
+    }
+
+    private static @NonNull ArrayList<LogisticsHistory> convertBatchRecordToLogisticHistory(List<BatchLogistics> batchRecords) {
+        return batchRecords.stream().map(logistics ->
+                        new LogisticsHistory(ProductType.BATCH, logistics.getSender().getName(),
+                                logistics.getRecipient().getName(), logistics.getCreated()))
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 }

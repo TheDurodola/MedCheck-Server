@@ -5,9 +5,11 @@ import com.yrsd.medcheck.exceptions.AccountNotFoundException;
 import com.yrsd.medcheck.security.dtos.responses.UserAccountResponse;
 import com.yrsd.medcheck.services.interfaces.UserAccountService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserAccountServiceImpl implements UserAccountService {

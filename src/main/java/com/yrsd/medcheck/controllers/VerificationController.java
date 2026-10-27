@@ -31,8 +31,11 @@ public class VerificationController {
     }
 
 
-    @PutMapping("/pack")
-    public ResponseEntity<VerifyPackResponse> verifyPack(@RequestBody VerifyPackRequest request) {
+    @PutMapping("/pack/{id}")
+    public ResponseEntity<VerifyPackResponse> verifyPack(@PathVariable String id) {
+        VerifyPackRequest request = new VerifyPackRequest();
+        request.setPackVerificationCode(id);
+
         VerifyPackResponse response = batchService.verifyPack(request);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }

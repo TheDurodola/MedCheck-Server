@@ -4,6 +4,7 @@ import com.yrsd.medcheck.exceptions.AccountNotFoundException;
 import com.yrsd.medcheck.security.dtos.responses.UserAccountResponse;
 import com.yrsd.medcheck.services.interfaces.UserAccountService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -15,6 +16,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Configuration
 @RequiredArgsConstructor
 public class CustomUserDetailsServiceConfiguration implements UserDetailsService {
@@ -29,6 +31,7 @@ public class CustomUserDetailsServiceConfiguration implements UserDetailsService
             authorities.add(new SimpleGrantedAuthority(response.getRole().name()));
             return new User(response.getUsername(), response.getPassword(), authorities);
         } catch (AccountNotFoundException e) {
+            log.debug("This is the root cause: {}", e.getMessage());
             throw new UsernameNotFoundException(e.getMessage());
         }
     }

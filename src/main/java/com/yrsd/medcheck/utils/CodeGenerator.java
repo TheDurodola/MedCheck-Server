@@ -25,6 +25,10 @@ public class CodeGenerator {
 
 
     public static String generateCode(String word){
+        if (word == null) {
+           throw new IllegalArgumentException("Input word cannot be null");
+        }
+        word = word.replaceAll("\\s+", "");
         StringBuilder sb = new StringBuilder(3);
 
         for (int i = 0; i < 3; i++) {

@@ -2,7 +2,6 @@ package com.yrsd.medcheck.config;
 
 import com.yrsd.medcheck.exceptions.PaymentGatewayClientException;
 import com.yrsd.medcheck.exceptions.PaymentGatewayServerException;
-import com.yrsd.medcheck.interceptor.PaystackLoggingInterceptor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

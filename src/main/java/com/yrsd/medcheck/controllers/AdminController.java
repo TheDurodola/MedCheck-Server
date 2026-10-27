@@ -1,6 +1,7 @@
 package com.yrsd.medcheck.controllers;
 
 import com.yrsd.medcheck.dtos.requests.CreateOrganisationRequest;
+import com.yrsd.medcheck.dtos.responses.AllOrganisationsResponse;
 import com.yrsd.medcheck.dtos.responses.CreateOrganisationResponse;
 import com.yrsd.medcheck.services.interfaces.OrganisationService;
 import lombok.RequiredArgsConstructor;
@@ -34,8 +35,9 @@ public class AdminController {
     }
 
     @GetMapping("/organisation")
-    public ResponseEntity<CreateOrganisationResponse> getAllOrganisation(CreateOrganisationRequest request){
-        return null;
+    public ResponseEntity<AllOrganisationsResponse> getAllOrganisation() {
+        AllOrganisationsResponse response = organisationService.getAllOrganisations();
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
     @PutMapping("/user/suspend")
