@@ -27,12 +27,23 @@ public class SecurityFilterChainConfiguration {
                 .authorizeHttpRequests((c) -> c
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/signup").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/signin").permitAll()
-                        .requestMatchers("/api/v1/consumer/**").hasAuthority("CONSUMER")
-                        .requestMatchers("/api/v1/retailer/**").hasAuthority("RETAIL_EMPLOYEE")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/retailer").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/manufacturer")
+                        .hasAnyAuthority("ADMINISTRATOR", "INVESTIGATOR", "WHOLESALE_EMPLOYEE")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/wholesaler")
+                        .hasAnyAuthority("ADMINISTRATOR", "INVESTIGATOR","MANUFACTURING_EMPLOYEE",
+                        "WHOLESALE_EMPLOYEE", "RETAIL_EMPLOYEE")
+
+
+
                         .requestMatchers("/api/v1/wholesaler/**").hasAuthority("WHOLESALE_EMPLOYEE")
                         .requestMatchers("/api/v1/manufacturer/**").hasAuthority("MANUFACTURING_EMPLOYEE")
                         .requestMatchers("/api/v1/investigator/**").hasAuthority("INVESTIGATOR")
                         .requestMatchers("/api/v1/admin/**").hasAuthority("ADMINISTRATOR")
+                        .requestMatchers("/api/v1/consumer/**").hasAuthority("CONSUMER")
+                        .requestMatchers("/api/v1/retailer/**").hasAuthority("RETAIL_EMPLOYEE")
+                        .requestMatchers("/api/v1/batch/**", "/batch/**")
+                        .hasAnyAuthority("MANUFACTURING_EMPLOYEE", "WHOLESALE_EMPLOYEE", "RETAIL_EMPLOYEE")
                         .requestMatchers(HttpMethod.POST, "/api/v1/verification/batch")
                         .hasAnyAuthority("INVESTIGATOR", "MANUFACTURER_EMPLOYEE", "RETAIL_EMPLOYEE",
                                 "WHOLESALE_EMPLOYEE")

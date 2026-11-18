@@ -79,8 +79,8 @@ public class BatchServiceImpl implements BatchService {
         log.info("Transfer batch request = {}", request);
         Batch batch = batches.findById(request.getBatchId()).orElseThrow(() ->
                 new BatchDoesntExistException("This batch doesn't exist."));
-        UserAccount sender = userAccounts.findById(request.getSenderId()).orElseThrow(() ->
-                new UsernameNotFoundException("User not found"));
+        UserAccount sender = userAccounts.findByUsername(request.getSenderId()).orElseThrow(() ->
+                new UsernameNotFoundException("Sender not found"));
         Organisation receiver = organisations.findById(request.getReceiverOrganisationId()).orElseThrow(() ->
                 new OrganizationDoesntExistException("Organisation not found"));
         log.info(receiver.getOrganisationType().toString());
@@ -247,6 +247,73 @@ public class BatchServiceImpl implements BatchService {
         Sachet savedSachet = sachets.save(sachet);
 
         return getVerifySachetResponse(request, savedSachet, batch, drug, history);
+    }
+
+    @Override
+    public AssignedBatchesResponse getBatchesAssignedToOrganisation(String username) {
+        log.info("Fetching batches assigned to organisation for employee: {}", username);
+        UserAccount employee = userAccounts.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
+
+        Organisation organisation = employee.getOrganisation();
+        if (organisation == null) {
+            throw new UnauthorizedException("User is not associated with any organisation");
+        }
+
+        Role role = employee.getRole();
+        if (role != Role.MANUFACTURING_EMPLOYEE && role != Role.WHOLESALE_EMPLOYEE && role != Role.RETAIL_EMPLOYEE) {
+            throw new UnauthorizedException("Only organisation employees can view assigned batches");
+        }
+
+        List<Batch> assignedBatches = batches.findBatchesCurrentlyAssignedToOrganisation(organisation);
+
+        Map<Drug, List<Batch>> batchesByDrug = assignedBatches.stream()
+                .filter(b -> b.getDrug() != null)
+                .collect(Collectors.groupingBy(
+                        Batch::getDrug,
+                        LinkedHashMap::new,
+                        Collectors.toList()
+                ));
+
+        List<DrugWithBatchesResponse> drugResponses = batchesByDrug.entrySet().stream()
+                .map(entry -> {
+                    Drug drug = entry.getKey();
+                    List<Batch> drugBatches = entry.getValue();
+
+                    String manufacturerName = drug.getManufacturer() != null ? drug.getManufacturer().getName() : null;
+
+                    List<BatchResponse> batchResponses = drugBatches.stream()
+                            .map(this::mapToBatchResponse)
+                            .toList();
+
+                    return DrugWithBatchesResponse.builder()
+                            .drugId(drug.getId())
+                            .drugBrandName(drug.getBrandName())
+                            .drugGenericName(drug.getGenericName())
+                            .drugManufacturerName(manufacturerName)
+                            .drugNafdacNumber(drug.getNafdacRegistrationNumber())
+                            .drugDescription(drug.getDescription())
+                            .batches(batchResponses)
+                            .build();
+                })
+                .toList();
+
+        return new AssignedBatchesResponse(drugResponses);
+    }
+
+    private BatchResponse mapToBatchResponse(Batch batch) {
+        int packCount = batch.getPacks() != null ? batch.getPacks().size() : 0;
+
+        return BatchResponse.builder()
+                .id(batch.getId())
+                .batchIdentifier(batch.getBatchIdentifier())
+                .verificationCode(batch.getVerificationCode())
+                .manufactureDate(batch.getManufactureDate())
+                .expirationDate(batch.getExpirationDate())
+                .verificationCount(batch.getVerificationCount())
+                .noOfPacks(packCount)
+                .created(batch.getCreated())
+                .build();
     }
 
 

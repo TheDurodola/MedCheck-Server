@@ -3,9 +3,11 @@ package com.yrsd.medcheck.services;
 import com.yrsd.medcheck.data.models.Organisation;
 import com.yrsd.medcheck.data.models.enums.OrganisationType;
 import com.yrsd.medcheck.data.repositories.Organisations;
+import com.yrsd.medcheck.dtos.OrganisationData;
 import com.yrsd.medcheck.dtos.requests.CreateOrganisationRequest;
 import com.yrsd.medcheck.dtos.responses.AllOrganisationsResponse;
 import com.yrsd.medcheck.dtos.responses.CreateOrganisationResponse;
+import com.yrsd.medcheck.dtos.responses.GetAllOrganisationByTypeResponse;
 import com.yrsd.medcheck.dtos.responses.OrganisationResponse;
 import com.yrsd.medcheck.services.interfaces.OrganisationService;
 import lombok.RequiredArgsConstructor;
@@ -53,8 +55,14 @@ public class OrganisationServiceImpl implements OrganisationService {
         return response;
     }
 
+    public GetAllOrganisationByTypeResponse getAllOrganisationsByType(OrganisationType type) {
+        List<Organisation> allByOrganisationTypeWholesale = organisations.findAllByOrganisationType(type);
+        List<OrganisationData> wholesalersData = allByOrganisationTypeWholesale.stream()
+                .map(org -> new OrganisationData(org.getName(), org.getId()))
+                .toList();
 
-
+        return new GetAllOrganisationByTypeResponse(wholesalersData);
+    }
     private static CreateOrganisationResponse getCreateOrganisationResponse(Organisation saved) {
         CreateOrganisationResponse response = new CreateOrganisationResponse();
         response.setOrganisationName(saved.getName());

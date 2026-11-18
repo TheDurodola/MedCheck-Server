@@ -13,4 +13,6 @@ public interface BatchService {
     VerifyBatchResponse verifyBatch(VerifyBatchRequest request);
     VerifyPackResponse verifyPack(VerifyPackRequest request);
     VerifySachetResponse verifySachet(VerifySachetRequest request);
+
+    AssignedBatchesResponse getBatchesAssignedToOrganisation(String username);
 }

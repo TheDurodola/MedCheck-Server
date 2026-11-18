@@ -79,6 +79,7 @@ public class AuthServiceImpl implements AuthService {
             Organisation organisation = organisations.findById(request.getOrganisationId()).orElseThrow(() ->
                     new OrganizationDoesntExistException("This organisation doesn't exist"));
 
+            log.debug("Organisation code provided: {}, actual organisation code: {}", request.getOrganisationCode(), organisation.getOrganizationCode());
             if (!request.getOrganisationCode().equals(organisation.getOrganizationCode())) {
                 throw new InvalidOrganisationCodeException("Your organisation code is invalid. " +
                         "Contact the appropriate personnel");

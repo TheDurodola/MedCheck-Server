@@ -8,6 +8,7 @@ import com.yrsd.medcheck.dtos.requests.*;
 import com.yrsd.medcheck.dtos.responses.*;
 import com.yrsd.medcheck.exceptions.*;
 import com.yrsd.medcheck.utils.CodeGenerator;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -356,5 +357,79 @@ class BatchServiceImplTest {
         verify(sachets, times(1)).save(sachet);
         assertEquals(BigInteger.ONE, sachet.getVerificationCount());
 //        assertEquals(pack.getVerificationCode(), response.getPack().get("packCode"));
+    }
+
+    @Test
+    @DisplayName("Get batches assigned to organisation - Success")
+    void getBatchesAssignedToOrganisation_Success() {
+        when(userAccounts.findByUsername(wholesalerEmployee.getUsername()))
+                .thenReturn(Optional.of(wholesalerEmployee));
+        when(batches.findBatchesCurrentlyAssignedToOrganisation(wholesaler))
+                .thenReturn(java.util.List.of(batch));
+
+        AssignedBatchesResponse response = batchService.getBatchesAssignedToOrganisation(wholesalerEmployee.getUsername());
+
+        assertNotNull(response);
+        assertNotNull(response.getDrugs());
+        assertEquals(1, response.getDrugs().size());
+
+        DrugWithBatchesResponse drugResponse = response.getDrugs().getFirst();
+        assertEquals(drug.getId(), drugResponse.getDrugId());
+        assertEquals(drug.getBrandName(), drugResponse.getDrugBrandName());
+        assertEquals(drug.getGenericName(), drugResponse.getDrugGenericName());
+        assertEquals(drug.getDescription(), drugResponse.getDrugDescription());
+        assertEquals(drug.getNafdacRegistrationNumber(), drugResponse.getDrugNafdacNumber());
+        assertEquals(manufacture.getName(), drugResponse.getDrugManufacturerName());
+
+        assertNotNull(drugResponse.getBatches());
+        assertEquals(1, drugResponse.getBatches().size());
+
+        BatchResponse batchResponse = drugResponse.getBatches().getFirst();
+        assertEquals(batch.getId(), batchResponse.getId());
+        assertEquals(batch.getBatchIdentifier(), batchResponse.getBatchIdentifier());
+        assertEquals(batch.getVerificationCode(), batchResponse.getVerificationCode());
+        assertEquals(batch.getManufactureDate(), batchResponse.getManufactureDate());
+        assertEquals(batch.getExpirationDate(), batchResponse.getExpirationDate());
+        assertEquals(BigInteger.ZERO, batchResponse.getVerificationCount());
+    }
+
+    @Test
+    @DisplayName("Get batches assigned to organisation - User not found")
+    void getBatchesAssignedToOrganisation_UserNotFound() {
+        when(userAccounts.findByUsername("unknown-user"))
+                .thenReturn(Optional.empty());
+
+        assertThrows(UsernameNotFoundException.class,
+                () -> batchService.getBatchesAssignedToOrganisation("unknown-user"));
+    }
+
+    @Test
+    @DisplayName("Get batches assigned to organisation - User has no organisation")
+    void getBatchesAssignedToOrganisation_NoOrganisation() {
+        UserAccount userWithoutOrg = new UserAccount();
+        userWithoutOrg.setUsername("lonely-user");
+        userWithoutOrg.setRole(Role.WHOLESALE_EMPLOYEE);
+        userWithoutOrg.setOrganisation(null);
+
+        when(userAccounts.findByUsername("lonely-user"))
+                .thenReturn(Optional.of(userWithoutOrg));
+
+        assertThrows(UnauthorizedException.class,
+                () -> batchService.getBatchesAssignedToOrganisation("lonely-user"));
+    }
+
+    @Test
+    @DisplayName("Get batches assigned to organisation - Non-employee role")
+    void getBatchesAssignedToOrganisation_NonEmployeeRole() {
+        UserAccount consumer = new UserAccount();
+        consumer.setUsername("regular-consumer");
+        consumer.setRole(Role.CONSUMER);
+        consumer.setOrganisation(wholesaler);
+
+        when(userAccounts.findByUsername("regular-consumer"))
+                .thenReturn(Optional.of(consumer));
+
+        assertThrows(UnauthorizedException.class,
+                () -> batchService.getBatchesAssignedToOrganisation("regular-consumer"));
     }
 }

@@ -495,6 +495,41 @@ Transfers legal custody of a manufactured batch from the manufacturer to a licen
   ```
 - **Response (`200 OK`)**: Returns `TransferBatchResponse` confirming batch transfer and logging the custody event in `BatchLogistics`.
 
+#### `GET /api/v1/batch`
+Returns all batches currently assigned to the organisation of the authenticated employee. This accounts for:
+- Batches created by the manufacturer that have not yet been distributed.
+- Batches received by a wholesaler or retailer whose most recent custody transfer belongs to the employee's organisation.
+*(Also accessible directly via `GET /api/v1/manufacturer/batch`, `GET /api/v1/wholesaler/batch`, and `GET /api/v1/retailer/batch`).*
+
+- **Authorization**: Required Role: `MANUFACTURING_EMPLOYEE`, `WHOLESALE_EMPLOYEE`, or `RETAIL_EMPLOYEE` (Bearer JWT token)
+- **Response (`200 OK`) (`AssignedBatchesResponse`)**:
+  ```json
+  {
+    "drugs": [
+      {
+        "drugId": "drug-100-uuid",
+        "drugBrandName": "Panadol",
+        "drugGenericName": "Paracetamol",
+        "drugManufacturerName": "Pfizer NG",
+        "drugNafdacNumber": "A4-1234",
+        "drugDescription": "Pain reliever",
+        "batches": [
+          {
+            "id": "8fbb1720-3b08-466d-8874-5c9413280872",
+            "batchIdentifier": "PANB0",
+            "verificationCode": "PAN-B-123456",
+            "manufactureDate": "2026-11-18",
+            "expirationDate": "2027-11-18",
+            "verificationCount": 0,
+            "noOfPacks": 100,
+            "created": "2026-11-18T18:00:00Z"
+          }
+        ]
+      }
+    ]
+  }
+  ```
+
 ---
 
 ### 3. Wholesaler Endpoints (`/api/v1/wholesaler`)
